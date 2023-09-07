@@ -1,0 +1,6 @@
+# Environment variables
+.env
+pyenv/
+
+# Pycache
+__pycache__
