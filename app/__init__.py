@@ -21,6 +21,7 @@ app.config['JWT_SESSION_COOKIE'] = os.getenv('JWT_SESSION_COOKIE')
 # app.config['JWT_COOKIE_DOMAIN'] = os.getenv('JWT_COOKIE_DOMAIN')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = acces_expire
 app.config['URL_PASSWORD_RESET'] = os.getenv('URL_PASSWORD_RESET')
+app_host = os.getenv('APP_HOST')
 
 smtp_config = {
     'MAIL_TLS': os.getenv('MAIL_TLS'),
