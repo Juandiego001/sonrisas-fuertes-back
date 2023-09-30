@@ -6,7 +6,8 @@ from flask_pymongo import PyMongo
 import os
 
 load_dotenv()
-app = APIFlask(__name__, template_folder='../templates', enable_openapi=True)
+app = APIFlask(__name__, template_folder='../templates',
+               enable_openapi=os.getenv('ENV') != 'production')
 acces_expire = datetime.timedelta(
     minutes=int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES')))
 app.config['MONGO_URI'] = os.getenv('MONGO_URI')
@@ -18,10 +19,9 @@ app.config['JWT_COOKIE_CSRF_PROTECT'] = (
 app.config['JWT_COOKIE_SECURE'] = (
     os.getenv('JWT_COOKIE_SECURE') == 'true')
 app.config['JWT_SESSION_COOKIE'] = os.getenv('JWT_SESSION_COOKIE')
-# app.config['JWT_COOKIE_DOMAIN'] = os.getenv('JWT_COOKIE_DOMAIN')
+app.config['JWT_COOKIE_DOMAIN'] = os.getenv('JWT_COOKIE_DOMAIN')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = acces_expire
 app.config['URL_PASSWORD_RESET'] = os.getenv('URL_PASSWORD_RESET')
-app_host = os.getenv('APP_HOST')
 
 smtp_config = {
     'MAIL_TLS': os.getenv('MAIL_TLS'),
