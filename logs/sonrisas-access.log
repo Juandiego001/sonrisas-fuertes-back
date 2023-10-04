@@ -1,7 +1,0 @@
-127.0.0.1 - - [04/Oct/2023:09:05:35 -0500] "GET /docs HTTP/1.1" 200 1706 "-" "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0"
-127.0.0.1 - - [04/Oct/2023:09:05:36 -0500] "GET /openapi.json HTTP/1.1" 200 7862 "http://localhost:5000/docs" "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0"
-127.0.0.1 - - [04/Oct/2023:09:05:46 -0500] "POST /api/account/login HTTP/1.1" 200 49 "http://localhost:5000/docs" "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0"
-127.0.0.1 - - [04/Oct/2023:09:42:13 -0500] "GET /api/account/logout HTTP/1.1" 200 28 "http://localhost:5000/docs" "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0"
-127.0.0.1 - - [04/Oct/2023:09:48:05 -0500] "GET /docs HTTP/1.1" 200 1706 "-" "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0"
-127.0.0.1 - - [04/Oct/2023:09:48:05 -0500] "GET /openapi.json HTTP/1.1" 200 7862 "http://localhost:5000/docs" "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0"
-127.0.0.1 - - [04/Oct/2023:09:48:16 -0500] "POST /api/account/login HTTP/1.1" 200 49 "http://localhost:5000/docs" "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0"
