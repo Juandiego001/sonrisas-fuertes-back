@@ -32,7 +32,7 @@ smtp_config = {
     'MAIL_PASSWORD': os.getenv('MAIL_PASSWORD')
 }
 
-mongo: PyMongo = PyMongo(app, os.getenv('MONGO_URI'))
+mongo: PyMongo = PyMongo(app)
 jwt: JWTManager = JWTManager(app)
 
 # Datos quemados para las pruebas
