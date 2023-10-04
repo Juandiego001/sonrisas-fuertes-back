@@ -1,9 +1,9 @@
 from http.client import HTTPException
 from apiflask import APIBlueprint, abort
-from app.schemas.teacher import TeacherIn
-from app import mongo
+from core.schemas.admin import AdminIn
+from core.app import mongo
 
-bp = APIBlueprint('teachers', __name__)
+bp = APIBlueprint('admins', __name__)
 
 # @bp.get('/')
 # def get_users():

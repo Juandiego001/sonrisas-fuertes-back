@@ -2,8 +2,8 @@ from http.client import HTTPException
 from secrets import token_urlsafe
 from threading import Timer
 from flask import render_template
-from app import app, smtp_config, mongo
-from app.utils import send_mail
+from core.app import app, smtp_config, mongo
+from core.utils import send_mail
 import json
 from bson import json_util, objectid
 

@@ -3,11 +3,10 @@ from apiflask import APIBlueprint, abort
 from flask import jsonify, request, send_from_directory
 from flask_jwt_extended import create_access_token, get_jwt_identity,\
     jwt_required, set_access_cookies, unset_jwt_cookies
-from app.schemas.account import Login, Email, Profile, Photo
-from app import users
-from app.services.account import request_reset_password, get_user_by_id,\
+from core.schemas.account import Login, Email, Profile, Photo
+from core.services.account import request_reset_password, get_user_by_id,\
     account_login
-from app.schemas.generic import Message
+from core.schemas.generic import Message
 from bson.errors import InvalidId
 
 bp = APIBlueprint('account', __name__)

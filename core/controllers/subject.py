@@ -1,6 +1,6 @@
 from http.client import HTTPException
 from apiflask import APIBlueprint
-from app import subjects
+from core.app import subjects
 
 bp = APIBlueprint('subject', __name__)
 

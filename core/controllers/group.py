@@ -1,7 +1,7 @@
 from http.client import HTTPException
 from apiflask import APIBlueprint
-from app import groups
-from app.schemas.group import GroupIn
+from core.app import groups
+from core.schemas.group import GroupIn
 
 bp = APIBlueprint('group', __name__)
 

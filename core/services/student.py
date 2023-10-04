@@ -1,5 +1,5 @@
 import json
-from app import mongo
+from core.app import mongo
 from bson import json_util
 
 def get_students(params: dict):

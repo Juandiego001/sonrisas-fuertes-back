@@ -1,11 +1,11 @@
-from app import app
-from app.controllers.account import bp as bp_account
-from app.controllers.admin import bp as bp_admin
-from app.controllers.teacher import bp as bp_teacher
-from app.controllers.student import bp as bp_student
-from app.controllers.group import bp as bp_group
-from app.controllers.subject import bp as bp_subject
-from app.controllers.resource import bp as bp_resource
+from core.app import app
+from core.controllers.account import bp as bp_account
+from core.controllers.admin import bp as bp_admin
+from core.controllers.teacher import bp as bp_teacher
+from core.controllers.student import bp as bp_student
+from core.controllers.group import bp as bp_group
+from core.controllers.subject import bp as bp_subject
+from core.controllers.resource import bp as bp_resource
 
 app.register_blueprint(bp_account, url_prefix='/api/account')
 app.register_blueprint(bp_admin, url_prefix='/api/admin')

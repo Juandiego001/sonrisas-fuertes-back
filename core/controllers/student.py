@@ -1,7 +1,7 @@
 from http.client import HTTPException
 from apiflask import APIBlueprint, abort
-from app.schemas.student import StudentIn, StudentsOut
-from app.services import student
+from core.schemas.student import StudentIn, StudentsOut
+from core.services import student
 
 bp = APIBlueprint('students', __name__)
 
