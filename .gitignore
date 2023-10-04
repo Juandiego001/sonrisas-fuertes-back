@@ -1,7 +1,6 @@
 .settings/
 .env
 __pycache__/
-logs/
 pyenv/
 activate
 instance/test-database.db

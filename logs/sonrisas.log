@@ -1,0 +1,15 @@
+2023-10-04 09:05:29 [1468312] [INFO] Starting gunicorn 21.2.0
+2023-10-04 09:05:29 [1468312] [INFO] Listening at: http://0.0.0.0:5000 (1468312)
+2023-10-04 09:05:29 [1468312] [INFO] Using worker: eventlet
+2023-10-04 09:05:29 [1468317] [INFO] Booting worker with pid: 1468317
+2023-10-04 09:05:29 [1468318] [INFO] Booting worker with pid: 1468318
+2023-10-04 09:05:29 [1468319] [INFO] Booting worker with pid: 1468319
+2023-10-04 09:05:29 [1468320] [INFO] Booting worker with pid: 1468320
+2023-10-04 09:05:29 [1468321] [INFO] Booting worker with pid: 1468321
+2023-10-04 09:06:10 [1468312] [INFO] Handling signal: int
+2023-10-04 09:06:11 [1468321] [INFO] Worker exiting (pid: 1468321)
+2023-10-04 09:06:11 [1468317] [INFO] Worker exiting (pid: 1468317)
+2023-10-04 09:06:11 [1468319] [INFO] Worker exiting (pid: 1468319)
+2023-10-04 09:06:11 [1468320] [INFO] Worker exiting (pid: 1468320)
+2023-10-04 09:06:11 [1468318] [INFO] Worker exiting (pid: 1468318)
+2023-10-04 09:06:12 [1468312] [INFO] Shutting down: Master
