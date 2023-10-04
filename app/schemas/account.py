@@ -1,4 +1,5 @@
 from apiflask import Schema, fields
+from app.schemas.generic import DefaultAuto
 
 
 class Login(Schema):
@@ -8,7 +9,15 @@ class Login(Schema):
 class Email(Schema):
     email = fields.String()
 
-class Profile(Schema):
+class Password(Schema):
+    password = fields.String()
+
+class Ability(Schema):
+    subject = fields.String()
+    action = fields.String()
+
+class Profile(DefaultAuto):
+    abilities = fields.List(fields.Nested(Ability))
     username = fields.String()
     name = fields.String()
     lastname = fields.String()

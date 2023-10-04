@@ -1,12 +1,11 @@
-from http.client import HTTPException
+from werkzeug.exceptions import HTTPException
 from apiflask import APIBlueprint, abort
 from flask import jsonify, request, send_from_directory
 from flask_jwt_extended import create_access_token, get_jwt_identity,\
     jwt_required, set_access_cookies, unset_jwt_cookies
-from app.schemas.account import Login, Email, Profile, Photo
-from app import users
+from app.schemas.account import Login, Email, Profile, Photo, Password
 from app.services.account import request_reset_password, get_user_by_id,\
-    account_login
+    account_login, set_account_password
 from app.schemas.generic import Message
 from bson.errors import InvalidId
 
@@ -24,11 +23,13 @@ def login(user_data):
         user = account_login(user_data)      
         data_profile = Profile().dump(user)
         access_token = create_access_token(
-            identity=str(user['_id']['$oid']), additional_claims=data_profile)
+            identity=str(data_profile['_id']), additional_claims=data_profile)
         response = jsonify({'message': 
                             f'Bienvenido/a {user["name"]} {user["lastname"]}'})
         set_access_cookies(response, access_token)
         return response
+    except HTTPException as ex:
+        abort(404, ex.description)
     except Exception as ex:
         abort(500, str(ex))
 
@@ -54,6 +55,19 @@ def reset_password(data):
     except Exception as ex:
         abort(500, str(ex))
 
+@bp.patch('/reset-password/<string:secret>')
+@bp.input(Password)
+def set_password(secret, data):
+    '''
+    Set password
+    :param data:
+    '''
+    try:
+        set_account_password(secret, data['password'])
+        return {'message': 'Password reseted successfully'}
+    except Exception as ex:
+        abort(500, str(ex))
+
 @bp.get('/profile')
 @bp.output(Profile)
 @jwt_required(optional=True)
@@ -76,4 +90,5 @@ def get_profile():
 @bp.get('/photo/<string:photo_url>')
 @bp.output(Photo)
 def get_photo(photo_url):
-    return send_from_directory('../uploads/photos/', photo_url, as_attatchment=True)
+    return send_from_directory('../uploads/photos/', photo_url, 
+                               as_attatchment=True)

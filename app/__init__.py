@@ -19,7 +19,7 @@ app.config['JWT_COOKIE_CSRF_PROTECT'] = (
 app.config['JWT_COOKIE_SECURE'] = (
     os.getenv('JWT_COOKIE_SECURE') == 'true')
 app.config['JWT_SESSION_COOKIE'] = os.getenv('JWT_SESSION_COOKIE')
-app.config['JWT_COOKIE_DOMAIN'] = os.getenv('JWT_COOKIE_DOMAIN')
+# app.config['JWT_COOKIE_DOMAIN'] = os.getenv('JWT_COOKIE_DOMAIN')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = acces_expire
 app.config['URL_PASSWORD_RESET'] = os.getenv('URL_PASSWORD_RESET')
 
@@ -32,7 +32,7 @@ smtp_config = {
     'MAIL_PASSWORD': os.getenv('MAIL_PASSWORD')
 }
 
-mongo: PyMongo = PyMongo(app, os.getenv('MONGO_URI'))
+mongo: PyMongo = PyMongo(app)
 jwt: JWTManager = JWTManager(app)
 
 # Datos quemados para las pruebas
