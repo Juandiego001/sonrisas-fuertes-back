@@ -6,6 +6,7 @@ from flask_pymongo import PyMongo
 import os
 
 load_dotenv()
+host = os.getenv('HOST')
 app = APIFlask(__name__, template_folder='../templates',
                enable_openapi=os.getenv('ENV') != 'production')
 acces_expire = datetime.timedelta(

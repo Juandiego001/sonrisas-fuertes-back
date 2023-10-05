@@ -1,4 +1,4 @@
-from app import app
+from app import app, host
 from app.controllers.account import bp as bp_account
 from app.controllers.admin import bp as bp_admin
 from app.controllers.teacher import bp as bp_teacher
@@ -18,4 +18,4 @@ app.register_blueprint(bp_resource, url_prefix='/api/resource')
 app.register_blueprint(bp_permission, url_prefix='/api/permission')
 
 if __name__ == '__main__':
-    app.run('localhost', 5000, True)
+    app.run(host, 5000, True)

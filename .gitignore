@@ -1,16 +1,7 @@
-# Environment variables
-.env
-pyenv/
-
-# Pycache
-__pycache__
-
 .settings/
 .env
 __pycache__/
-logs/
 pyenv/
 activate
-instance/test-database.db
-dist/
 uploads
+pyvenv.cfg
