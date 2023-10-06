@@ -35,10 +35,7 @@ def get_teacher_detail(teacherid):
 @bp.output(Teachers)
 def get_teachers():
     try:
-        test = teacher.get_teachers()
-        print('teachers*******', test)
-        teachers = Teachers().dump({'items': test})
-        return teachers
+        return Teachers().dump({'items': teacher.get_teachers()})
     except Exception as ex:
         abort(500, str(ex))
 

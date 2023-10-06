@@ -11,7 +11,6 @@ def account_login(user_data: dict):
     user = mongo.db.usuario.find_one(
         {'username': user_data['username'], 
          'password': user_data['password']})
-    print('user********', user)
     if not user:
         raise HTTPException('Usuario o contraseña incorrectos')
     else:

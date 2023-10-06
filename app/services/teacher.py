@@ -6,7 +6,6 @@ from app.services.profile_user import create_profile_user
 
 def create_teacher(params: dict):
     teacher = get_teacher_detail(params)
-    print('teachers*******', teacher)
     if teacher:
         raise HTTPException('El usuario ya existe')
     params['updated_at'] = datetime.now()
