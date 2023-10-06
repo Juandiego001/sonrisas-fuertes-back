@@ -5,7 +5,7 @@ from flask_jwt_extended import create_access_token, get_jwt_identity,\
     jwt_required, set_access_cookies, unset_jwt_cookies
 from app.schemas.account import Login, Email, Profile, Photo, Password
 from app.services.account import request_reset_password, get_user_by_id,\
-    account_login, set_account_password
+    account_login, set_account_password, get_user_permissions
 from app.schemas.generic import Message
 from bson.errors import InvalidId
 
@@ -80,6 +80,20 @@ def get_profile():
             return {}
         user_id = get_jwt_identity()
         user_detail = get_user_by_id(user_id)
+        username = user_detail['username']
+
+        read_permissions = get_user_permissions(username, 'read').try_next()
+        create_permissions = get_user_permissions(username, 'create').try_next()
+        update_permissions = get_user_permissions(username, 'update').try_next()
+
+        user_detail['abilities'] = []
+        if read_permissions:
+            user_detail['abilities'] += read_permissions['permissions']
+        if create_permissions:
+            user_detail['abilities'] += create_permissions['permissions']
+        if update_permissions:
+            user_detail['abilities'] += update_permissions['permissions']
+            
         user_profile = Profile().dump(user_detail)
         return user_profile
     except InvalidId as ex:

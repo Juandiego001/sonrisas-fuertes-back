@@ -11,6 +11,7 @@ def account_login(user_data: dict):
     user = mongo.db.usuario.find_one(
         {'username': user_data['username'], 
          'password': user_data['password']})
+    print('user********', user)
     if not user:
         raise HTTPException('Usuario o contraseña incorrectos')
     else:
@@ -22,53 +23,62 @@ def get_user_detail(email: str):
 def get_user_by_id(userid: str):
     return mongo.db.usuario.find_one(ObjectId(userid))
 
-def get_user_permissions(userid: str):
-    mongo.db.permisos.aggregate([{
-        '$lookup': {
-            'from': 'perfil', 
-            'localField': 'profileid', 
-            'foreignField': '_id', 
-            'let': {
-                'profileid': '$_id'
-            }, 
-            'pipeline': [
-                {
-                    '$lookup': {
-                        'from': 'perfil_usuario', 
-                        'let': {
-                            'profile_pid': '$profileid', 
-                            'profile_uid': '$userid'
-                        }, 
-                        'pipeline': [
-                            {
-                                '$lookup': {
-                                    'from': 'usuario', 
-                                    'localField': 'userid', 
-                                    'foreignField': '_id', 
-                                    'as': 'user'
-                                }
-                            }
-                        ], 
-                        'as': 'profile_user'
+def get_user_permissions(username: str, permission: str):
+    return mongo.db.perfil_usuario.aggregate(
+        [{
+            '$lookup': {
+                'from': 'permisos', 
+                'localField': 'profileid', 
+                'foreignField': 'profileid', 
+                'pipeline': [
+                    {
+                        '$lookup': {
+                            'from': 'modulo', 
+                            'localField': 'moduleid', 
+                            'foreignField': '_id', 
+                            'as': 'modules'
+                        }
+                    }, {
+                        '$unwind': {
+                            'path': '$modules'
+                        }
+                    }, {
+                        '$addFields': {
+                            'subject': '$modules.name',
+                            'action': f'{permission}',
+                        }
                     }
-                }
-            ], 
-            'as': 'profile'
+                ], 
+                'as': 'permissions'
+            }
+        }, {
+            '$lookup': {
+                'from': 'usuario', 
+                'localField': 'userid', 
+                'foreignField': '_id', 
+                'as': 'users'
+            }
+        }, {
+            '$unwind': {
+                'path': '$users'
+            }
+        }, {
+            '$match': {
+                '$expr': {
+                    '$eq': [
+                        '$users.username', username
+                    ]
+                },
+                f'permissions.{permission}': True
+            }
+        }, {
+            '$project': {
+                '_id': 0, 
+                'permissions.action': 1,
+                'permissions.subject': 1
+            }
         }
-    }, {
-        '$unwind': {
-            'path': '$profile'
-        }
-    }, {
-        '$match': {
-            'profile.profile_user.user.username': 'juan_diego'
-        }
-    }])
-
-    mongo.db.permisos
-
-
-    return ''
+    ])
 
 def request_reset_password(email: str):
     user = get_user_detail(email)

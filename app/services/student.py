@@ -9,14 +9,11 @@ def create_student(params: dict):
     if student:
         raise HTTPException('El usuario ya existe')
     params['updated_at'] = datetime.now()
-    profileid = mongo.db.perfil.find_one({'name': 'estudiante'})['_id']
+    profileid = mongo.db.perfil.find_one({'name': 'Estudiante'})['_id']
     studentid = mongo.db.usuario.insert_one(params).inserted_id
     return create_profile_user({
         'userid': studentid,
-        'profileid': profileid,
-        'status': True,
-        'updated_by': params['updated_by'],
-        'updated_at': params['updated_at']
+        'profileid': profileid
     })
         
 
@@ -33,34 +30,38 @@ def get_students():
                 'from': 'perfil', 
                 'localField': 'profileid', 
                 'foreignField': '_id', 
-                'as': 'profile_info'
+                'as': 'profile'
+            }
+        }, {
+            '$unwind': {
+                'path': '$profile'
             }
         }, {
             '$lookup': {
                 'from': 'usuario', 
                 'localField': 'userid', 
                 'foreignField': '_id', 
-                'as': 'user_info'
+                'as': 'user'
             }
         }, {
             '$unwind': {
-                'path': '$user_info'
+                'path': '$user'
             }
         }, {
             '$match': {
-                'profile_info.name': 'estudiante'
+                'profile.name': 'Estudiante'
             },
         }, {
             '$project': {
-                '_id': '$user_info._id',
-                'name': '$user_info.name',
-                'lastname': '$user_info.lastname',
-                'document': '$user_info.document',
-                'username': '$user_info.username',
-                'email': '$user_info.email',
-                'status': '$user_info.status',
-                'updated_by': '$user_info.updated_by',
-                'updated_at': '$user_info.updated_at',
+                '_id': '$user._id',
+                'name': '$user.name',
+                'lastname': '$user.lastname',
+                'document': '$user.document',
+                'username': '$user.username',
+                'email': '$user.email',
+                'status': '$user.status',
+                'updated_by': '$user.updated_by',
+                'updated_at': '$user.updated_at',
             }
         }]))
 
