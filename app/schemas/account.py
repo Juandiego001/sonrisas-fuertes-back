@@ -13,8 +13,8 @@ class ChangePassword(Schema):
 class Email(Schema):
     email = fields.String()
 
-class Password(Schema):
-    password = fields.String()
+class NewPassword(Schema):
+    new_password = fields.String()
 
 class Ability(Schema):
     subject = fields.String()

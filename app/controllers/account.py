@@ -4,7 +4,7 @@ from flask import jsonify, request, send_from_directory
 from flask_jwt_extended import create_access_token, get_jwt_identity,\
     jwt_required, set_access_cookies, unset_jwt_cookies
 from app.schemas.account import ChangePassword, Login, Email, Profile, Photo,\
-    Password
+    NewPassword
 from app.services import account
 from app.schemas.generic import Message
 from bson.errors import InvalidId
@@ -56,14 +56,14 @@ def reset_password(data):
         abort(500, str(ex))
 
 @bp.patch('/reset-password/<string:secret>')
-@bp.input(Password)
+@bp.input(NewPassword)
 def set_password(secret, data):
     '''
     Set password
     :param data:
     '''
     try:
-        account.set_password(secret, data['password'])
+        account.set_password(secret, data['new_password'])
         return {'message': 'Password reseted successfully'}
     except HTTPException as ex:
         abort(404, ex.description)
