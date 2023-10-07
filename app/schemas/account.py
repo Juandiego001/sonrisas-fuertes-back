@@ -6,6 +6,10 @@ class Login(Schema):
     password = fields.String()
     username = fields.String()
 
+class ChangePassword(Schema):
+    new_password = fields.String()
+    current_password = fields.String()
+
 class Email(Schema):
     email = fields.String()
 
@@ -22,6 +26,7 @@ class Profile(DefaultAuto):
     name = fields.String()
     lastname = fields.String()
     document = fields.Integer()
+    email = fields.String()
 
 class Photo(Schema):
     photo = fields.File()

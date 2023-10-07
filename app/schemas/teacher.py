@@ -8,7 +8,7 @@ class TeacherIn(DefaultAuto):
     username = fields.String()
     password = fields.String(required=False, load_default='')
     email = fields.String()
-    status = fields.String(required=False, load_default='PENDING')
+    status = fields.String(load_default='PENDING', allow_none=True)
 
 class TeacherOut(DefaultAuto):
     name = fields.String()
@@ -16,7 +16,7 @@ class TeacherOut(DefaultAuto):
     document = fields.String()
     username = fields.String()
     email = fields.String()
-    status = fields.String(required=False)
+    status = fields.String()
     fullname = fields.Function(
         lambda teacher: f'{teacher["name"]} {teacher["lastname"]}')
 

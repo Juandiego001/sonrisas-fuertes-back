@@ -1,4 +1,4 @@
-from http.client import HTTPException
+from werkzeug.exceptions import HTTPException
 from apiflask import APIBlueprint, abort
 from flask_jwt_extended import get_jwt, jwt_required
 from app.schemas.student import StudentIn, StudentOut, Students
@@ -43,10 +43,14 @@ def get_students():
 @bp.patch('/<string:studentid>')
 @bp.input(StudentIn)
 @bp.output(Message)
+@jwt_required()
 def update_student(studentid, data):
     try:
+        data['updated_by'] = get_jwt()['username']
         student.update_student(studentid, data)
         return {'message': 'Student updated successfully'}
+    except HTTPException as ex:        
+        abort(400, ex.description)
     except Exception as ex:
         abort(500, str(ex))
 

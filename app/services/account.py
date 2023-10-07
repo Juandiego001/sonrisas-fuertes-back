@@ -1,13 +1,12 @@
 import json
 from werkzeug.exceptions import HTTPException
-from secrets import token_urlsafe
 from threading import Timer
 from flask import render_template
 from app import app, smtp_config, mongo
 from app.utils import send_mail
 from bson import json_util, ObjectId
 
-def account_login(user_data: dict):
+def login(user_data: dict):
     user = mongo.db.usuario.find_one(
         {'username': user_data['username'], 
          'password': user_data['password']})
@@ -16,11 +15,12 @@ def account_login(user_data: dict):
     else:
         return user
 
-def get_user_detail(email: str):
-    return mongo.db.usuario.find_one({'email': email})
 
 def get_user_by_id(userid: str):
     return mongo.db.usuario.find_one(ObjectId(userid))
+
+def get_user_by_email(email: str):
+    return mongo.db.usuario.find_one({'email': email})
 
 def get_user_permissions(username: str, permission: str):
     return mongo.db.perfil_usuario.aggregate(
@@ -29,6 +29,9 @@ def get_user_permissions(username: str, permission: str):
                 'from': 'permisos', 
                 'localField': 'profileid', 
                 'foreignField': 'profileid', 
+                'let': {
+                    f'{permission}': f'${permission}'
+                },
                 'pipeline': [
                     {
                         '$lookup': {
@@ -40,6 +43,14 @@ def get_user_permissions(username: str, permission: str):
                     }, {
                         '$unwind': {
                             'path': '$modules'
+                        }
+                    }, {
+                        '$match': {
+                            '$expr': {
+                                '$eq': [
+                                    f'${permission}', True
+                                ]
+                            }
                         }
                     }, {
                         '$addFields': {
@@ -67,8 +78,7 @@ def get_user_permissions(username: str, permission: str):
                     '$eq': [
                         '$users.username', username
                     ]
-                },
-                f'permissions.{permission}': True
+                }
             }
         }, {
             '$project': {
@@ -80,7 +90,7 @@ def get_user_permissions(username: str, permission: str):
     ])
 
 def request_reset_password(email: str):
-    user = get_user_detail(email)
+    user = get_user_by_email(email)
     if not user:
         raise HTTPException('User not found')
     userid = json.loads(json_util.dumps(user))
@@ -94,8 +104,16 @@ def request_reset_password(email: str):
                                       email, message,))
         t.start()
 
-def set_account_password(userid: str, new_password: str):
-    return mongo.db.usuario.find_one_and_update(
+def set_password(userid: str, new_password: str):
+    updated = mongo.db.usuario.find_one_and_update(
         {'_id': ObjectId(userid)},
         {'$set': {'password': new_password}})
+    if not updated:
+        raise HTTPException('User not found')
 
+def change_password(userid: str, data: dict):
+    updated = mongo.db.usuario.find_one_and_update(
+        {'_id': ObjectId(userid), 'password': data['current_password']},
+        {'$set': {'password': data['new_password']}})
+    if not updated:
+        raise HTTPException('Current password doesnt match')

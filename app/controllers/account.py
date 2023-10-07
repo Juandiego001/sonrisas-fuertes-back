@@ -3,9 +3,9 @@ from apiflask import APIBlueprint, abort
 from flask import jsonify, request, send_from_directory
 from flask_jwt_extended import create_access_token, get_jwt_identity,\
     jwt_required, set_access_cookies, unset_jwt_cookies
-from app.schemas.account import Login, Email, Profile, Photo, Password
-from app.services.account import request_reset_password, get_user_by_id,\
-    account_login, set_account_password, get_user_permissions
+from app.schemas.account import ChangePassword, Login, Email, Profile, Photo,\
+    Password
+from app.services import account
 from app.schemas.generic import Message
 from bson.errors import InvalidId
 
@@ -20,7 +20,7 @@ def login(user_data):
     :param data:
     '''
     try:
-        user = account_login(user_data)      
+        user = account.login(user_data)      
         data_profile = Profile().dump(user)
         access_token = create_access_token(
             identity=str(data_profile['_id']), additional_claims=data_profile)
@@ -50,7 +50,7 @@ def reset_password(data):
     :param data:
     '''
     try:
-        request_reset_password(data['email'])
+        account.request_reset_password(data['email'])
         return {'message': 'Sent email successfully'}
     except Exception as ex:
         abort(500, str(ex))
@@ -63,8 +63,10 @@ def set_password(secret, data):
     :param data:
     '''
     try:
-        set_account_password(secret, data['password'])
+        account.set_password(secret, data['password'])
         return {'message': 'Password reseted successfully'}
+    except HTTPException as ex:
+        abort(404, ex.description)
     except Exception as ex:
         abort(500, str(ex))
 
@@ -79,12 +81,15 @@ def get_profile():
         if not get_jwt_identity():
             return {}
         user_id = get_jwt_identity()
-        user_detail = get_user_by_id(user_id)
+        user_detail = account.get_user_by_id(user_id)
         username = user_detail['username']
 
-        read_permissions = get_user_permissions(username, 'read').try_next()
-        create_permissions = get_user_permissions(username, 'create').try_next()
-        update_permissions = get_user_permissions(username, 'update').try_next()
+        read_permissions = account.\
+            get_user_permissions(username, 'read').try_next()
+        create_permissions = account.\
+            get_user_permissions(username, 'create').try_next()
+        update_permissions = account.\
+            get_user_permissions(username, 'update').try_next()
 
         user_detail['abilities'] = []
         if read_permissions:
@@ -97,6 +102,19 @@ def get_profile():
         user_profile = Profile().dump(user_detail)
         return user_profile
     except InvalidId as ex:
+        abort(404, ex.description)
+    except Exception as ex:
+        abort(500, str(ex))
+
+@bp.patch('/change-password')
+@bp.input(ChangePassword)
+@bp.output(Message)
+@jwt_required()
+def change_password(data):
+    try:
+        account.change_password(get_jwt_identity(), data)
+        return {'message': 'Password changed successfully'}
+    except HTTPException as ex:
         abort(404, ex.description)
     except Exception as ex:
         abort(500, str(ex))

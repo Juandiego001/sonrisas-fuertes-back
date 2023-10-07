@@ -42,10 +42,14 @@ def get_teachers():
 @bp.patch('/<string:teacherid>')
 @bp.input(TeacherIn)
 @bp.output(Message)
+@jwt_required()
 def update_teacher(teacherid, data):
     try:
+        data['updated_by'] = get_jwt()['username']
         teacher.update_teacher(teacherid, data)
         return {'message': 'Teacher updated successfully'}
+    except HTTPException as ex:
+        abort(400, ex.description)
     except Exception as ex:
         abort(500, str(ex))
 
