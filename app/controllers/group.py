@@ -1,38 +1,55 @@
-from http.client import HTTPException
-from apiflask import APIBlueprint
-from app import groups
-from app.schemas.group import GroupIn
+from flask_jwt_extended import get_jwt, jwt_required
+from werkzeug.exceptions import HTTPException
+from apiflask import APIBlueprint, abort
+from app.schemas.group import GroupIn, GroupOut, Groups
+from app.services import group
+from app.schemas.generic import Message
 
 bp = APIBlueprint('group', __name__)
 
-@bp.get('/')
-def get_groups():
-    try:
-        return groups
-    except Exception as e:
-        raise HTTPException(500, e)
-
-@bp.get('/<string:teacherid>')
-def get_groups_by_teacher(teacherid):
-    try:
-        return {'message': 'Groups by teacher id'}
-    except Exception as e:
-        raise HTTPException(500, e)
-
 @bp.post('/')
 @bp.input(GroupIn)
-def create_group(group):
+@bp.output(Message)
+@jwt_required()
+def create_group(data):
     try:
-        print('group', group)
-        groups.append(group)
-        return {'message': 'Group creation'}
-    except Exception as e:
-        raise HTTPException(e)
+        data['updated_by'] = get_jwt()['username']
+        group.create_group(data)
+        return {'message': 'Grupo creado'}
+    except HTTPException as ex:
+        abort(400, ex.description)
+    except Exception as ex:
+        abort(500, str(ex))
+
+@bp.get('/<string:groupid>')
+@bp.output(GroupOut)
+def get_group_detail(groupid):
+    try:
+        return group.get_group_by_id(groupid)
+    except HTTPException as ex:
+        abort(400, ex.description)
+    except Exception as ex:
+        abort(500, str(ex))
+
+@bp.get('/')
+@bp.output(Groups)
+def get_groups():
+    try:
+        return Groups().dump({'items': group.get_groups()})
+    except Exception as ex:
+        abort(500, str(ex))
 
 @bp.patch('/<string:groupid>')
-def update_group(group, groupid):
+@bp.input(GroupIn)
+@bp.output(Message)
+@jwt_required()
+def update_group(groupid, data):
     try:
-        return {'message': 'Group update'}
-    except Exception as e:
-        raise HTTPException(500, e)
+        data['updated_by'] = get_jwt()['username']
+        group.update_group(groupid, data)
+        return {'message': 'Grupo actualizado con éxito'}
+    except HTTPException as ex:
+        abort(400, ex.description)
+    except Exception as ex:
+        abort(500, str(ex))
 

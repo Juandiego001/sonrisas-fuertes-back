@@ -4,7 +4,7 @@ from marshmallow import EXCLUDE, ValidationError, missing
 from apiflask.validators import Length
 
 class ObjectId(fields.Field):
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, **kwargs):
         try:
             return bson.ObjectId(value)
         except Exception:

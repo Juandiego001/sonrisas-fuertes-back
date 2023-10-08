@@ -5,7 +5,7 @@ from app.schemas.teacher import TeacherIn, TeacherOut, Teachers
 from app.schemas.generic import Message
 from app.services import teacher
 
-bp = APIBlueprint('teachers', __name__)
+bp = APIBlueprint('teacher', __name__)
 
 @bp.post('/')
 @bp.input(TeacherIn)
@@ -27,7 +27,7 @@ def get_teacher_detail(teacherid):
     try:
         return teacher.get_teacher_by_id(teacherid)
     except HTTPException as ex:
-        abort(401, ex.description)
+        abort(400, ex.description)
     except Exception as ex:
         abort(500, str(ex))
 

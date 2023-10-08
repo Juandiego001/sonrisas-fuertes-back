@@ -1,11 +1,11 @@
 from werkzeug.exceptions import HTTPException
 from apiflask import APIBlueprint, abort
 from flask_jwt_extended import get_jwt, jwt_required
-from app.schemas.student import StudentIn, StudentOut, Students
+from app.schemas.student import StudentIn, StudentOut, Students, StudentsByGroup
 from app.services import student
 from app.schemas.generic import Message
 
-bp = APIBlueprint('students', __name__)
+bp = APIBlueprint('student', __name__)
 
 @bp.post('/')
 @bp.input(StudentIn)
@@ -27,7 +27,7 @@ def get_student_detail(studentid):
     try:
         return student.get_student_by_id(studentid)
     except HTTPException as ex:
-        abort(401, ex.description)
+        abort(400, ex.description)
     except Exception as ex:
         abort(500, str(ex))
 
@@ -35,8 +35,7 @@ def get_student_detail(studentid):
 @bp.output(Students)
 def get_students():
     try:
-        students = Students().dump({'items': student.get_students()})
-        return students
+        return Students().dump({'items': student.get_students()})
     except Exception as ex:
         abort(500, str(ex))
 
@@ -48,9 +47,19 @@ def update_student(studentid, data):
     try:
         data['updated_by'] = get_jwt()['username']
         student.update_student(studentid, data)
-        return {'message': 'Student updated successfully'}
+        return {'message': 'Guardado exitosamente'}
     except HTTPException as ex:        
         abort(400, ex.description)
     except Exception as ex:
         abort(500, str(ex))
 
+@bp.get('/group')
+@bp.input(StudentsByGroup, location='query')
+@bp.output(Students)
+def get_students_by_group(query_data):
+    try:
+        print('querydata******', query_data['groupid'])
+        return Students().dump(
+            {'items': student.get_students_by_group(query_data['groupid'])})
+    except Exception as ex:
+        abort(500, str(ex))

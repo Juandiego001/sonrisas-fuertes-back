@@ -5,7 +5,7 @@ from app.schemas.admin import AdminIn, AdminOut, Admins
 from app.schemas.generic import Message
 from app.services import admin
 
-bp = APIBlueprint('admins', __name__)
+bp = APIBlueprint('admin', __name__)
 
 @bp.post('/')
 @bp.input(AdminIn)
@@ -27,7 +27,7 @@ def get_admin_detail(adminid):
     try:
         return admin.get_admin_by_id(adminid)
     except HTTPException as ex:
-        abort(401, ex.description)
+        abort(400, ex.description)
     except Exception as ex:
         abort(500, str(ex))
 

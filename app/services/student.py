@@ -28,7 +28,7 @@ def get_student_by_id(studentid: str):
         raise HTTPException('Student not found')
     return student
 
-def get_students():
+def get_students(query: dict = {}):
     return list(mongo.db.perfil_usuario.aggregate(
         [{
             '$lookup': {
@@ -54,7 +54,10 @@ def get_students():
             }
         }, {
             '$match': {
-                'profile.name': 'Estudiante'
+                '$and': [
+                    {'profile.name': 'Estudiante'},
+                    query
+                ]
             },
         }, {
             '$project': {
@@ -104,3 +107,6 @@ def update_student(studentid, data):
         raise HTTPException('User not found')
     return student
 
+def get_students_by_group(groupid: str):
+    return get_students(
+        {'user.groupid': ObjectId(groupid) if groupid else None})
