@@ -7,6 +7,7 @@ def create_publication(params: dict):
     params['userid'] = ObjectId(params['userid'])
     params['updated_at'] = datetime.now()
     params['created_at'] = datetime.now()
+    params['status'] = True
     return mongo.db.publicacion.insert_one(params)
 
 def get_publications():
@@ -23,10 +24,19 @@ def get_publications():
             'path': '$users'
         }
     }, {
+        '$match': {
+            '$expr': {
+                '$eq': [
+                    '$status', True
+                ]
+            }
+        }
+    }, {
         '$project': {
             '_id': 1,
             'description': 1,
             'created_at': 1,
+            'status': 1,
             'username': "$users.username",
             'fullname': {"$concat": ["$users.name", " ", "$users.lastname"]}
         }
