@@ -8,6 +8,7 @@ from app.controllers.subject import bp as bp_subject
 from app.controllers.resource import bp as bp_resource
 from app.controllers.permission import bp as bp_permission
 from app.controllers.group import bp as bp_group
+from app.controllers.publication import bp as bp_publication
 
 app.register_blueprint(bp_account, url_prefix='/api/account')
 app.register_blueprint(bp_admin, url_prefix='/api/admin')
@@ -18,6 +19,7 @@ app.register_blueprint(bp_subject, url_prefix='/api/subject')
 app.register_blueprint(bp_resource, url_prefix='/api/resource')
 app.register_blueprint(bp_group, url_prefix='/api/group')
 app.register_blueprint(bp_permission, url_prefix='/api/permission')
+app.register_blueprint(bp_publication, url_prefix='/api/publication')
 
 if __name__ == '__main__':
     app.run(host, 5000, True)

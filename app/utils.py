@@ -40,3 +40,6 @@ def send_mail(smtp_config: dict, subject: str, to: str, msg: str):
                 server_send_mail(smtp_config, server, subject, to, msg)
     except OSError:
         raise HTTPException('Invalid SMTP configuration')
+
+def success_message():
+    return {'message': 'Guardado extiosamente'}
