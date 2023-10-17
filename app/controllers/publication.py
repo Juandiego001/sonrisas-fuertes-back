@@ -2,6 +2,7 @@ from flask_jwt_extended import get_jwt, jwt_required
 from werkzeug.exceptions import HTTPException
 from apiflask import APIBlueprint, abort
 from app.schemas.publication import PublicationIn, PublicationOut, Publications
+from app.schemas.comment import Comments
 from app.services import publication
 from app.schemas.generic import Message
 from app.utils import success_message
@@ -43,8 +44,14 @@ def get_publication_detail(publicationid):
     Get publication detail
     '''
     try:
-        return PublicationOut().dump(
-            publication.get_publication_by_id(publicationid))
+        publications =  publication.get_publication_by_id(publicationid).next()
+        comments = publications.pop('comments')
+
+        publications = PublicationOut().dump(publications)
+        comments = Comments().dump({'items': comments})
+
+        publications['comments'] = comments['items']
+        return publications
     except HTTPException as ex:
         abort(404, ex.description)
     except Exception as ex:

@@ -34,6 +34,7 @@ def get_publications():
     }, {
         '$project': {
             '_id': 1,
+            'title': 1,
             'description': 1,
             'created_at': 1,
             'status': 1,
@@ -48,11 +49,106 @@ def get_publications():
     }
 ])
 
+def get_publication_user_comments(publicationid: str):
+    return mongo.db.publicacion.aggregate([
+        {
+            '$lookup': {
+                'from': 'usuario', 
+                'localField': 'userid', 
+                'foreignField': '_id', 
+                'as': 'users'
+            }
+        }, {
+            '$unwind': {
+                'path': '$users'
+            }
+        }, {
+          '$lookup': {
+            'from': 'comments',
+            'localField': '_id',
+            'foreignField': 'publicationid',
+            'pipeline': [
+              {
+                '$lookup': {
+                  'from': 'usuario',
+                  'localField': 'userid',
+                  'foreignField': '_id',
+                  'as': 'user'
+                }
+              },
+              {
+                '$unwind': {
+                  'path': '$user'
+                }
+              },
+              {
+                '$match': {
+                    '$expr': {
+                        '$eq': [
+                            '$status', True
+                        ]
+                    }
+                }
+              },
+              {
+                '$project': {
+                  '_id': 1,
+                  'description': 1,
+                  'status': 1,
+                  'created_at': 1,
+                  'username': '$user.username',
+                  'fullname': {"$concat": ["$user.name", " ", "$user.lastname"]}
+                }
+              },
+              {
+                  '$sort': {
+                      'created_at': -1
+                  }
+              }
+              ],
+            'as': 'comments'
+          }
+        }, {
+            '$match': {
+                '$expr': {
+                    '$and': [
+                        {
+                            '$eq': [
+                                '$status', True
+                            ]
+                        },
+                        {
+                            '$eq': [
+                                '$_id', ObjectId(publicationid)
+                            ]
+                        }
+                    ]
+                }
+            }
+        }, {
+            '$project': {
+                '_id': 1,
+                'title': 1,
+                'description': 1,
+                'created_at': 1,
+                'status': 1,
+                'comments': 1,
+                'username': "$users.username",
+                'fullname': {"$concat": ["$users.name", " ", "$users.lastname"]}
+            }
+        },
+        {
+            '$sort': {
+                'created_at': -1
+            }
+        }
+    ])
+
 def get_publication_by_id(publicationid: str):
     publication = verify_publication_exists(publicationid)
     if not publication:
         raise HTTPException('Publicación no encontrada')
-    return publication
+    return get_publication_user_comments(publicationid)
     
 
 def verify_publication_exists(publicationid: str):

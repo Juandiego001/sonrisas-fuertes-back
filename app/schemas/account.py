@@ -27,6 +27,7 @@ class Profile(DefaultAuto):
     lastname = fields.String()
     document = fields.Integer()
     email = fields.String()
+    profiles = fields.List(fields.String())
 
 class Photo(Schema):
     photo = fields.File()

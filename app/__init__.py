@@ -35,9 +35,3 @@ smtp_config = {
 
 mongo: PyMongo = PyMongo(app)
 jwt: JWTManager = JWTManager(app)
-
-# Datos quemados para las pruebas
-users = []
-groups = []
-subjects = []
-resources = []

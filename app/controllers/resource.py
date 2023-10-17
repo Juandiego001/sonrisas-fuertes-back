@@ -1,6 +1,6 @@
 from http.client import HTTPException
 from apiflask import APIBlueprint
-from app import resources
+resources = []
 
 bp = APIBlueprint('resource', __name__)
 

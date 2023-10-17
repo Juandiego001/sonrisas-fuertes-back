@@ -9,6 +9,8 @@ from app.services import account
 from app.schemas.generic import Message
 from bson.errors import InvalidId
 
+from app.utils import success_message
+
 bp = APIBlueprint('account', __name__)
 
 @bp.post('/login')
@@ -81,7 +83,7 @@ def get_profile():
         if not get_jwt_identity():
             return {}
         user_id = get_jwt_identity()
-        user_detail = account.get_user_by_id(user_id)
+        user_detail = account.get_user_by_id(user_id).try_next()
         username = user_detail['username']
 
         read_permissions = account.\
@@ -103,6 +105,19 @@ def get_profile():
         return user_profile
     except InvalidId as ex:
         abort(404, ex.description)
+    except Exception as ex:
+        abort(500, str(ex))
+
+@bp.put('/profile/photo/<string:username>')
+@bp.input(Photo, location='files')
+@bp.output(Message)
+def upload_photo(username, files):
+    try:
+        print('username********', username)
+        account.upload_photo(username, files['photo'])
+        return success_message()
+    except HTTPException as ex:
+        abort(400, ex.description)
     except Exception as ex:
         abort(500, str(ex))
 

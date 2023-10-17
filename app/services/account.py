@@ -15,9 +15,51 @@ def login(user_data: dict):
     else:
         return user
 
-
 def get_user_by_id(userid: str):
-    return mongo.db.usuario.find_one(ObjectId(userid))
+    user = mongo.db.usuario.aggregate([{
+            '$lookup': {
+                'from': 'perfil_usuario', 
+                'localField': '_id', 
+                'foreignField': 'userid', 
+                'pipeline': [
+                    {
+                        '$lookup': {
+                            'from': 'perfil', 
+                            'localField': 'profileid', 
+                            'foreignField': '_id', 
+                            'as': 'profiles'
+                        }
+                    }, {
+                        '$unwind': {
+                            'path': '$profiles'
+                        }
+                    }
+                ], 
+                'as': 'profiles_user'
+            }
+        }, {
+            '$match': {
+                '$expr': {
+                    '$eq': [
+                        '$_id', ObjectId(userid)
+                    ]
+                }
+            }
+        }, {
+            '$project': {
+                'username': 1, 
+                'name': 1, 
+                'lastname': 1, 
+                'document': 1, 
+                'email': 1, 
+                'profiles': '$profiles_user.profiles.name'
+            }
+        }
+    ])
+    if not user:
+        raise HTTPException('Usuario no encontrado')
+
+    return user
 
 def get_user_by_email(email: str):
     return mongo.db.usuario.find_one({'email': email})
