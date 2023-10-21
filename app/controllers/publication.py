@@ -15,7 +15,7 @@ bp = APIBlueprint('publication', __name__)
 @jwt_required()
 def create_publication(data):
     '''
-    Create publication
+    Create publication that could be an activiy
     :param data:
     '''
     try:

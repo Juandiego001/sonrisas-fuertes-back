@@ -4,6 +4,7 @@ from apiflask import APIFlask
 from flask_jwt_extended import JWTManager
 from flask_pymongo import PyMongo
 import os
+import dropbox
 
 load_dotenv()
 host = os.getenv('HOST')
@@ -35,3 +36,9 @@ smtp_config = {
 
 mongo: PyMongo = PyMongo(app)
 jwt: JWTManager = JWTManager(app)
+dbx: dropbox.Dropbox = dropbox.Dropbox(
+    oauth2_access_token=os.getenv('DBX_ACCESS_TOKEN'),
+    oauth2_refresh_token=os.getenv('DBX_REFRESH_TOKEN'),
+    scope=['files.content.write', 'files.content.read'],
+    app_key=os.getenv('DBX_KEY'),
+    app_secret=os.getenv('DBX_SECRET'))
