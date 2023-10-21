@@ -10,7 +10,7 @@ def create_publication(params: dict):
     params['status'] = True
     return mongo.db.publicacion.insert_one(params)
 
-def get_publications(activites=False):
+def get_publications(isActivity=False):
     return mongo.db.publicacion.aggregate([
     {
         '$lookup': {
@@ -34,7 +34,7 @@ def get_publications(activites=False):
                     },
                     {
                         '$eq': [
-                            '$isActivity', True
+                            '$isActivity', isActivity
                         ]
                     }
                 ]
