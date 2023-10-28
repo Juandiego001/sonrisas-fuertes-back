@@ -11,6 +11,7 @@ from app.controllers.group import bp as bp_group
 from app.controllers.publication import bp as bp_publication
 from app.controllers.comment import bp as bp_comment
 from app.controllers.folder import bp as bp_folder
+from app.controllers.activity import bp as bp_activity
 
 app.register_blueprint(bp_account, url_prefix='/api/account')
 app.register_blueprint(bp_admin, url_prefix='/api/admin')
@@ -24,6 +25,7 @@ app.register_blueprint(bp_permission, url_prefix='/api/permission')
 app.register_blueprint(bp_publication, url_prefix='/api/publication')
 app.register_blueprint(bp_comment, url_prefix='/api/comment')
 app.register_blueprint(bp_folder, url_prefix='/api/folder')
+app.register_blueprint(bp_activity, url_prefix='/api/activity')
 
 if __name__ == '__main__':
     app.run(host, 5000, True)
