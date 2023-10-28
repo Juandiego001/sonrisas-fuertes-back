@@ -1,10 +1,14 @@
 from apiflask import fields, Schema
 from app.schemas.generic import DefaultAuto, ObjectId
+from app.schemas.attachment import AttachmentOut
 
 class CommentIn(DefaultAuto):
     publicationid = ObjectId()
     description = fields.String()
+    isDelivery = fields.Boolean(required=False, load_default=False)
     status = fields.Boolean()
+    files = fields.List(fields.File, required=False)
+    links = fields.List(fields.String, required=False)
 
 class CommentOut(DefaultAuto):
     description = fields.String()
@@ -12,6 +16,8 @@ class CommentOut(DefaultAuto):
     status = fields.Boolean()
     username = fields.String()
     fullname = fields.String()
+    isDelivery = fields.Boolean()
+    attachments = fields.List(fields.Nested(AttachmentOut))
 
 class Comments(Schema):
     items = fields.List(fields.Nested(CommentOut))

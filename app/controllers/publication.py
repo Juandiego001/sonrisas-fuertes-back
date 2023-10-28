@@ -37,6 +37,7 @@ def get_publications():
     except Exception as ex:
         abort(500, str(ex))
 
+
 @bp.get('/<string:publicationid>')
 @bp.output(PublicationOut)
 def get_publication_detail(publicationid):
@@ -46,16 +47,15 @@ def get_publication_detail(publicationid):
     try:
         publications =  publication.get_publication_by_id(publicationid).next()
         comments = publications.pop('comments')
-
         publications = PublicationOut().dump(publications)
         comments = Comments().dump({'items': comments})
-
         publications['comments'] = comments['items']
         return publications
     except HTTPException as ex:
         abort(404, ex.description)
     except Exception as ex:
         abort(500, str(ex))
+
 
 @bp.patch('/<string:publicationid>')
 @bp.input(PublicationIn)
@@ -68,6 +68,37 @@ def update_publication(publicationid, data):
     try:
         publication.update_publication(publicationid, data)
         return success_message()
+    except HTTPException as ex:
+        abort(404, ex.description)
+    except Exception as ex:
+        abort(500, str(ex))
+
+
+@bp.get('/activities')
+@bp.output(Publications)
+def get_activites():
+    '''
+    Get activities
+    '''
+    try:
+        return Publications().dump(
+            {'items': publication.get_publications(isActivity=True)})
+    except Exception as ex:
+        abort(500, str(ex))
+
+
+@bp.get('/activities/<string:activityid>')
+@bp.output(PublicationOut)
+@jwt_required()
+def get_activity_detail(activityid):
+    '''
+    Get activity detail
+    '''
+    try:
+        publications =  publication.get_activity_by_id(
+            activityid, get_jwt()['username']).next()
+        publications = PublicationOut().dump(publications)
+        return publications
     except HTTPException as ex:
         abort(404, ex.description)
     except Exception as ex:

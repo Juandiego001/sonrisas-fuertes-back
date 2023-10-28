@@ -9,18 +9,18 @@ from app.utils import success_message
 bp = APIBlueprint('comment', __name__)
 
 @bp.post('/')
-@bp.input(CommentIn)
+@bp.input(CommentIn, location='form_and_files')
 @bp.output(Message)
 @jwt_required()
-def create_comment(data):
+def create_comment(form_and_files_data):
     '''
     Create comment
     :param data:
     '''
     try:
-        data['userid'] = get_jwt()['_id']
-        data['updated_by'] = get_jwt()['username']
-        comment.create_comment(data)
+        form_and_files_data['userid'] = get_jwt()['_id']
+        form_and_files_data['updated_by'] = get_jwt()['username']
+        comment.create_comment(form_and_files_data)
         return {'message': 'Guardado exitosamente'}
     except HTTPException as ex:
         abort(404, ex.description)
@@ -57,11 +57,26 @@ def get_comment_detail(commentid):
 @bp.output(Message)
 def update_comment(commentid, data):
     '''
-    Update publications
+    Update comments
     :param data:
     '''
     try:
         comment.update_comment(commentid, data)
+        return success_message()
+    except HTTPException as ex:
+        abort(404, ex.description)
+    except Exception as ex:
+        abort(500, str(ex))
+
+@bp.delete('/<string:commentid>')
+@bp.output(Message)
+def delete_comment(commentid, data):
+    '''
+    Delete comments
+    :param data:
+    '''
+    try:
+        comment.delete_comment(commentid, data)
         return success_message()
     except HTTPException as ex:
         abort(404, ex.description)
