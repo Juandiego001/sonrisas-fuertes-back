@@ -11,19 +11,3 @@ class FolderOut(DefaultAuto):
 
 class Folders(Schema):
     items = fields.List(fields.Nested(FolderOut))
-
-# Files
-class FolderFileIn(Schema):
-    file = fields.File()
-
-class FolderFileOut(DefaultAuto):
-    folderid = ObjectId()
-    hash_name = fields.String()
-    real_name = fields.String()
-    url = fields.String()
-    status = fields.Boolean()
-
-class FolderFiles(Schema):
-    items = fields.List(fields.Nested(FolderFileOut))
-
-

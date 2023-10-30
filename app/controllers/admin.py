@@ -4,8 +4,11 @@ from flask_jwt_extended import get_jwt, jwt_required
 from app.schemas.admin import AdminIn, AdminOut, Admins
 from app.schemas.generic import Message
 from app.services import admin
+from app.utils import success_message
+
 
 bp = APIBlueprint('admin', __name__)
+
 
 @bp.post('/')
 @bp.input(AdminIn)
@@ -15,11 +18,12 @@ def create_admin(data):
     try:
         data['updated_by'] = get_jwt()['username']
         admin.create_admin(data)
-        return {'message': 'Admin created successfully'}
+        return success_message()
     except HTTPException as ex:
         abort(400, ex.description)
     except Exception as ex:
         abort(500, str(ex))
+
 
 @bp.get('/<string:adminid>')
 @bp.output(AdminOut)
@@ -31,6 +35,7 @@ def get_admin_detail(adminid):
     except Exception as ex:
         abort(500, str(ex))
 
+
 @bp.get('/')
 @bp.output(Admins)
 def get_admins():
@@ -38,6 +43,7 @@ def get_admins():
         return Admins().dump({'items': admin.get_admins()})
     except Exception as ex:
         abort(500, str(ex))
+
 
 @bp.patch('/<string:adminid>')
 @bp.input(AdminIn)
@@ -47,7 +53,7 @@ def update_admin(adminid, data):
     try:
         data['updated_by'] = get_jwt()['username']
         admin.update_admin(adminid, data)
-        return {'message': 'Admin updated successfully'}
+        return success_message()
     except HTTPException as ex:
         abort(400, ex.description)
     except Exception as ex:

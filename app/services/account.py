@@ -6,8 +6,9 @@ from app import app, smtp_config, mongo
 from app.utils import send_mail
 from bson import json_util, ObjectId
 
+
 def login(user_data: dict):
-    user = mongo.db.usuario.find_one(
+    user = mongo.db.users.find_one(
         {'username': user_data['username'], 
          'password': user_data['password']})
     if not user:
@@ -15,27 +16,28 @@ def login(user_data: dict):
     else:
         return user
 
+
 def get_user_by_id(userid: str):
-    user = mongo.db.usuario.aggregate([{
+    user = mongo.db.users.aggregate([{
             '$lookup': {
-                'from': 'perfil_usuario', 
+                'from': 'user_profiles', 
                 'localField': '_id', 
                 'foreignField': 'userid', 
                 'pipeline': [
                     {
                         '$lookup': {
-                            'from': 'perfil', 
+                            'from': 'profiles', 
                             'localField': 'profileid', 
                             'foreignField': '_id', 
-                            'as': 'profiles'
+                            'as': 'profile'
                         }
                     }, {
                         '$unwind': {
-                            'path': '$profiles'
+                            'path': '$profile'
                         }
                     }
                 ], 
-                'as': 'profiles_user'
+                'as': 'user_profile'
             }
         }, {
             '$match': {
@@ -52,23 +54,25 @@ def get_user_by_id(userid: str):
                 'lastname': 1, 
                 'document': 1, 
                 'email': 1, 
-                'profiles': '$profiles_user.profiles.name'
+                'profiles': '$user_profile.profile.name'
             }
         }
     ])
+
     if not user:
         raise HTTPException('Usuario no encontrado')
-
     return user
 
+
 def get_user_by_email(email: str):
-    return mongo.db.usuario.find_one({'email': email})
+    return mongo.db.users.find_one({'email': email})
+
 
 def get_user_permissions(username: str, permission: str):
-    return mongo.db.perfil_usuario.aggregate(
+    return mongo.db.user_profiles.aggregate(
         [{
             '$lookup': {
-                'from': 'permisos', 
+                'from': 'permissions', 
                 'localField': 'profileid', 
                 'foreignField': 'profileid', 
                 'let': {
@@ -77,7 +81,7 @@ def get_user_permissions(username: str, permission: str):
                 'pipeline': [
                     {
                         '$lookup': {
-                            'from': 'modulo', 
+                            'from': 'modules', 
                             'localField': 'moduleid', 
                             'foreignField': '_id', 
                             'as': 'modules'
@@ -105,20 +109,20 @@ def get_user_permissions(username: str, permission: str):
             }
         }, {
             '$lookup': {
-                'from': 'usuario', 
+                'from': 'users', 
                 'localField': 'userid', 
                 'foreignField': '_id', 
-                'as': 'users'
+                'as': 'user'
             }
         }, {
             '$unwind': {
-                'path': '$users'
+                'path': '$user'
             }
         }, {
             '$match': {
                 '$expr': {
                     '$eq': [
-                        '$users.username', username
+                        '$user.username', username
                     ]
                 }
             }
@@ -131,10 +135,11 @@ def get_user_permissions(username: str, permission: str):
         }
     ])
 
+
 def request_reset_password(email: str):
     user = get_user_by_email(email)
     if not user:
-        raise HTTPException('User not found')
+        raise HTTPException('Usuario no encontrado')
     userid = json.loads(json_util.dumps(user))
     link = f'{app.config["URL_PASSWORD_RESET"]}/{userid["_id"]["$oid"]}'
     message = render_template(
@@ -146,16 +151,18 @@ def request_reset_password(email: str):
                                       email, message,))
         t.start()
 
+
 def set_password(userid: str, new_password: str):
-    updated = mongo.db.usuario.find_one_and_update(
+    updated = mongo.db.users.find_one_and_update(
         {'_id': ObjectId(userid)},
         {'$set': {'password': new_password}})
     if not updated:
-        raise HTTPException('User not found')
+        raise HTTPException('Usuario no encontrado')
+
 
 def change_password(userid: str, data: dict):
-    updated = mongo.db.usuario.find_one_and_update(
+    updated = mongo.db.users.find_one_and_update(
         {'_id': ObjectId(userid), 'password': data['current_password']},
         {'$set': {'password': data['new_password']}})
     if not updated:
-        raise HTTPException('Current password doesnt match')
+        raise HTTPException('No hay coincidencia con la contraseña actual')

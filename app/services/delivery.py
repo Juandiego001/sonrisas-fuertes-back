@@ -1,24 +1,24 @@
 from datetime import datetime
 import hashlib
 from app import mongo, dbx
-from app.services.publication import verify_publication_exists
+from app.services import activity
 from bson import ObjectId
 from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
 from app.utils import generate_id
 
 
-def upload_comment_file(commentid, file, updated_by):
+def upload_delivery_file(deliveryid, file, updated_by):
     filename = secure_filename(file.filename)
     format = filename.split('.')[-1]
     hash_name = (f'{hashlib.sha1(generate_id().encode("utf-8")).hexdigest()}.'
                  f'{format}')
-    dbx.files_upload(file.read(), f'/comments/{commentid}/{hash_name}')
+    dbx.files_upload(file.read(), f'/deliveries/{deliveryid}/{hash_name}')
     url = f'{hash_name}?v={generate_id()}'
     return mongo.db.attachments.insert_one({
-        'commentid': ObjectId(commentid),
+        'deliveryid': ObjectId(deliveryid),
         'folderid': None,
-        'publicationid': None,
+        'activityid': None,
         'hash_name': hash_name,
         'real_name': filename,
         'url': url,
@@ -29,9 +29,9 @@ def upload_comment_file(commentid, file, updated_by):
     })
 
 
-def create_comment(params: dict):
-    if not verify_publication_exists(params['publicationid']):
-        raise HTTPException('Publicación no encontrada')
+def create_delivery(params: dict):
+    if not activity.verify_activity_exists(params['activityid']):
+        raise HTTPException('Actividad no encontrada')
     
     params['userid'] = ObjectId(params['userid'])
     params['created_at'] = datetime.now()
@@ -46,17 +46,17 @@ def create_comment(params: dict):
     if 'links' in params:
         links = params.pop('links')
 
-    commentid = mongo.db.comments.insert_one(params).inserted_id
+    deliveryid = mongo.db.deliveries.insert_one(params).inserted_id
 
     if len(files):
         for file in files:
-            upload_comment_file(commentid, file, params['updated_by'])
+            upload_delivery_file(deliveryid, file, params['updated_by'])
     
     if len(links):
         mongo.db.attachments.insert_many([{
-            'commentid': ObjectId(commentid),
+            'deliveryid': ObjectId(deliveryid),
             'folderid': None,
-            'publicationid': None,
+            'activityid': None,
             'hash_name': None,
             'real_name': None,
             'url': link,
@@ -67,42 +67,39 @@ def create_comment(params: dict):
             'updated_by': params['updated_by']
         } for link in links])
 
-    return commentid
+    return deliveryid
 
 
-def get_comments():
-    return mongo.db.comments.find({})
+def get_deliveries():
+    return mongo.db.deliveries.find({})
 
 
-def verify_comment_exists(publicationid: str):
-    return mongo.db.comments.find_one(ObjectId(publicationid))
+def verify_delivery_exists(activityid: str):
+    return mongo.db.deliveries.find_one(ObjectId(activityid))
 
 
-def get_comment_by_id(commentid: str):
-    comment = verify_comment_exists(commentid)
-    if not comment:
-        raise HTTPException('Comentario no encontrado')
-    return comment
+def get_delivery_by_id(deliveryid: str):
+    delivery = verify_delivery_exists(deliveryid)
+    if not delivery:
+        raise HTTPException('Entrega no encontrada')
+    return delivery
 
 
-def update_comment(commentid: str, params: dict):
-    if not verify_comment_exists(commentid):
-        raise HTTPException('Comentario no encontrado')
-    
+def update_delivery(deliveryid: str, params: dict):
+    if not verify_delivery_exists(deliveryid):
+        raise HTTPException('Entrega no encontrada')
     params['updated_at'] = datetime.now()
-    updated = mongo.db.comments.update_one(
-        {'_id': ObjectId(commentid)}, {'$set': params})
+    updated = mongo.db.deliveries.update_one(
+        {'_id': ObjectId(deliveryid)}, {'$set': params})
     if not updated:
-        raise HTTPException('El comentario no fue actualizado')
-    
+        raise HTTPException('La entrega no fue actualizada')
     return updated
 
 
-def delete_comment(commentid: str):
-    if not verify_comment_exists(commentid):
-        raise HTTPException('Comentario no encontrado')
-    
-    deleted = mongo.db.comments.delete_one(ObjectId(commentid))
+def delete_delivery(deliveryid: str):
+    if not verify_delivery_exists(deliveryid):
+        raise HTTPException('Entrega no encontrada')
+    deleted = mongo.db.deliveries.delete_one(ObjectId(deliveryid))
     if not deleted:
-        raise HTTPException('El comentario no fue eliminado')
+        raise HTTPException('La entrega no fue eliminada')
     return deleted

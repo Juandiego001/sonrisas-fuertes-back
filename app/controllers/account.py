@@ -1,6 +1,6 @@
 from werkzeug.exceptions import HTTPException
 from apiflask import APIBlueprint, abort
-from flask import jsonify, request, send_from_directory
+from flask import jsonify, send_from_directory
 from flask_jwt_extended import create_access_token, get_jwt_identity,\
     jwt_required, set_access_cookies, unset_jwt_cookies
 from app.schemas.account import ChangePassword, Login, Email, Profile, Photo,\
@@ -8,10 +8,11 @@ from app.schemas.account import ChangePassword, Login, Email, Profile, Photo,\
 from app.services import account
 from app.schemas.generic import Message
 from bson.errors import InvalidId
-
 from app.utils import success_message
 
+
 bp = APIBlueprint('account', __name__)
+
 
 @bp.post('/login')
 @bp.input(Login)
@@ -35,14 +36,16 @@ def login(user_data):
     except Exception as ex:
         abort(500, str(ex))
 
+
 @bp.get('/logout')
 def logout():
     try:
-        response = jsonify({'message': 'Session ended'})
+        response = jsonify({'message': 'Sesión finalizada'})
         unset_jwt_cookies(response)
         return response
     except Exception as ex:
         abort(500, str(ex))
+
 
 @bp.post('/reset-password')
 @bp.input(Email)
@@ -53,9 +56,11 @@ def reset_password(data):
     '''
     try:
         account.request_reset_password(data['email'])
-        return {'message': 'Sent email successfully'}
+        return {'message':
+                'Se ha enviado un correo para reestablecer la contraseña'}
     except Exception as ex:
         abort(500, str(ex))
+
 
 @bp.patch('/reset-password/<string:secret>')
 @bp.input(NewPassword)
@@ -66,11 +71,12 @@ def set_password(secret, data):
     '''
     try:
         account.set_password(secret, data['new_password'])
-        return {'message': 'Password reseted successfully'}
+        return success_message()
     except HTTPException as ex:
         abort(404, ex.description)
     except Exception as ex:
         abort(500, str(ex))
+
 
 @bp.get('/profile')
 @bp.output(Profile)
@@ -108,6 +114,7 @@ def get_profile():
     except Exception as ex:
         abort(500, str(ex))
 
+
 @bp.put('/profile/photo/<string:username>')
 @bp.input(Photo, location='files')
 @bp.output(Message)
@@ -121,6 +128,7 @@ def upload_photo(username, files):
     except Exception as ex:
         abort(500, str(ex))
 
+
 @bp.patch('/change-password')
 @bp.input(ChangePassword)
 @bp.output(Message)
@@ -128,11 +136,12 @@ def upload_photo(username, files):
 def change_password(data):
     try:
         account.change_password(get_jwt_identity(), data)
-        return {'message': 'Password changed successfully'}
+        return success_message()
     except HTTPException as ex:
         abort(404, ex.description)
     except Exception as ex:
         abort(500, str(ex))
+
 
 @bp.get('/photo/<string:photo_url>')
 @bp.output(Photo)

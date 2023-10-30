@@ -1,28 +1,28 @@
 from flask_jwt_extended import get_jwt, jwt_required
 from werkzeug.exceptions import HTTPException
 from apiflask import APIBlueprint, abort
-from app.schemas.comment import CommentIn, CommentOut, Comments
-from app.services import comment
+from app.schemas.delivery import DeliveryIn, DeliveryOut, Deliveries
+from app.services import delivery
 from app.schemas.generic import Message
 from app.utils import success_message
 
 
-bp = APIBlueprint('comment', __name__)
+bp = APIBlueprint('delivery', __name__)
 
 
 @bp.post('/')
-@bp.input(CommentIn, location='form_and_files')
+@bp.input(DeliveryIn, location='form_and_files')
 @bp.output(Message)
 @jwt_required()
-def create_comment(form_and_files_data):
+def create_delivery(form_and_files_data):
     '''
-    Create comment for publications
+    Create delivery for activities
     :param data:
     '''
     try:
         form_and_files_data['userid'] = get_jwt()['_id']
         form_and_files_data['updated_by'] = get_jwt()['username']
-        comment.create_comment(form_and_files_data)
+        delivery.create_delivery(form_and_files_data)
         return success_message()
     except HTTPException as ex:
         abort(404, ex.description)
@@ -31,42 +31,42 @@ def create_comment(form_and_files_data):
 
 
 @bp.get('/')
-@bp.output(Comments)
-def get_comments():
+@bp.output(Deliveries)
+def get_deliveries():
     '''
-    Get comments
+    Get deliveries
     '''
     try:
-        return Comments().dump({'items': comment.get_comments()})
+        return Deliveries().dump({'items': delivery.get_deliveries()})
     except Exception as ex:
         abort(500, str(ex))
 
 
-@bp.get('/<string:commentid>')
-@bp.output(CommentOut)
-def get_comment_detail(commentid):
+@bp.get('/<string:deliveryid>')
+@bp.output(DeliveryOut)
+def get_delivery_detail(deliveryid):
     '''
-    Get comment detail
+    Get delivery detail
     '''
     try:
-        return CommentOut().dump(
-            comment.get_comment_by_id(commentid))
+        return DeliveryOut().dump(
+            delivery.get_delivery_by_id(deliveryid))
     except HTTPException as ex:
         abort(404, ex.description)
     except Exception as ex:
         abort(500, str(ex))
 
 
-@bp.patch('/<string:commentid>')
-@bp.input(CommentIn)
+@bp.patch('/<string:deliveryid>')
+@bp.input(DeliveryIn)
 @bp.output(Message)
-def update_comment(commentid, data):
+def update_delivery(deliveryid, data):
     '''
-    Update comments
+    Update delivery
     :param data:
     '''
     try:
-        comment.update_comment(commentid, data)
+        delivery.update_delivery(deliveryid, data)
         return success_message()
     except HTTPException as ex:
         abort(404, ex.description)
@@ -74,15 +74,15 @@ def update_comment(commentid, data):
         abort(500, str(ex))
 
 
-@bp.delete('/<string:commentid>')
+@bp.delete('/<string:deliveryid>')
 @bp.output(Message)
 @jwt_required()
-def delete_comment(commentid):
+def delete_delivery(deliveryid):
     '''
-    Delete comments
+    Delete delivery
     '''
     try:
-        comment.delete_comment(commentid)
+        delivery.delete_delivery(deliveryid)
         return success_message()
     except HTTPException as ex:
         abort(404, ex.description)

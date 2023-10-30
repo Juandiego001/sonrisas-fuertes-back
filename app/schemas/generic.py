@@ -1,6 +1,6 @@
 from apiflask import Schema, fields
 import bson
-from marshmallow import EXCLUDE, ValidationError, missing
+from marshmallow import EXCLUDE, ValidationError
 from apiflask.validators import Length
 
 class ObjectId(fields.Field):
@@ -12,7 +12,7 @@ class ObjectId(fields.Field):
 
     def _serialize(self, value, attr, obj):
         if value is None:
-            return missing
+            return None
         return str(value)
 
 class DefaultAuto(Schema):

@@ -2,7 +2,12 @@ from datetime import datetime
 from werkzeug.exceptions import HTTPException
 from app import mongo
 from bson import ObjectId
-from app.services.profile_user import create_profile_user
+from app.services.profile_user import create_user_profile
+
+
+def verify_if_teacher_exists(params: list):
+    return mongo.db.users.find_one({'$or': params})
+
 
 def create_teacher(params: dict):
     teacher = verify_if_teacher_exists([
@@ -14,24 +19,26 @@ def create_teacher(params: dict):
         raise HTTPException('El usuario ya existe')
     params['status'] = 'PENDING'
     params['updated_at'] = datetime.now()
-    profileid = mongo.db.perfil.find_one({'name': 'Profesor'})['_id']
-    teacherid = mongo.db.usuario.insert_one(params).inserted_id
-    return create_profile_user({
+    profileid = mongo.db.profiles.find_one({'name': 'Profesor'})['_id']
+    teacherid = mongo.db.users.insert_one(params).inserted_id
+    return create_user_profile({
         'userid': teacherid,
         'profileid': profileid
     })    
 
+
 def get_teacher_by_id(teacherid: str):
     teacher = mongo.db.usuario.find_one(ObjectId(teacherid))
     if not teacher:
-        raise HTTPException('Teacher not found')
+        raise HTTPException('Profesor no encontrado')
     return teacher
 
+
 def get_teachers():
-    return list(mongo.db.perfil_usuario.aggregate(
+    return list(mongo.db.user_profiles.aggregate(
         [{
             '$lookup': {
-                'from': 'perfil', 
+                'from': 'profiles', 
                 'localField': 'profileid', 
                 'foreignField': '_id', 
                 'as': 'profile'
@@ -69,37 +76,35 @@ def get_teachers():
             }
         }]))
 
-def verify_if_teacher_exists(data: list):
-    return mongo.db.usuario.find_one({'$or': data})
 
-def update_teacher(teacherid, data):
+def update_teacher(teacherid, params):
     teacherid = ObjectId(teacherid)
-    teacher = mongo.db.usuario.find_one({'_id': teacherid})
+    teacher = mongo.db.users.find_one(teacherid)
     if not teacher:
-        raise HTTPException('Teacher was not found')
+        raise HTTPException('Profesor no encontrado')
     
     verify_data = [
-        {'username': data['username']\
-         if teacher['username'] != data['username'] else ''},
-        {'email': data['email']\
-         if teacher['email'] != data['email'] else ''},
-        {'document': data['document']\
-         if teacher['document'] != data['document'] else ''}
+        {'username': params['username']\
+         if teacher['username'] != params['username'] else ''},
+        {'email': params['email']\
+         if teacher['email'] != params['email'] else ''},
+        {'document': params['document']\
+         if teacher['document'] != params['document'] else ''}
     ]
 
     if verify_if_teacher_exists(verify_data):
-        raise HTTPException('User already registered')
+        raise HTTPException('El usuario ya existe')
     
-    data['updated_at'] = datetime.now()
+    params['updated_at'] = datetime.now()
 
     # Se evita que al actualizar se reinicie la contraseña de manera
     # no deseada
-    if data['password'] == '':
-        data.pop('password')
+    if params['password'] == '':
+        params.pop('password')
 
-    updated = mongo.db.usuario.update_one({'_id': teacherid}, {'$set': data})
+    updated = mongo.db.users.update_one({'_id': teacherid}, {'$set': params})
 
     if not updated:
-        raise HTTPException('User not found')
-    return teacher
+        raise HTTPException('Profesor no encontrado')
+    return updated
 

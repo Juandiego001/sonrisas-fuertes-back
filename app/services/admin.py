@@ -2,7 +2,12 @@ from datetime import datetime
 from werkzeug.exceptions import HTTPException
 from app import mongo
 from bson import ObjectId
-from app.services.profile_user import create_profile_user
+from app.services.profile_user import create_user_profile
+
+
+def verify_if_admin_exists(params: list):
+    return mongo.db.users.find_one({'$or': params})
+
 
 def create_admin(params: dict):
     admin = verify_if_admin_exists([
@@ -14,24 +19,26 @@ def create_admin(params: dict):
         raise HTTPException('El usuario ya existe')
     params['status'] = 'PENDING'
     params['updated_at'] = datetime.now()
-    profileid = mongo.db.perfil.find_one({'name': 'Administrador'})['_id']
-    adminid = mongo.db.usuario.insert_one(params).inserted_id
-    return create_profile_user({
+    profileid = mongo.db.profiles.find_one({'name': 'Administrador'})['_id']
+    adminid = mongo.db.users.insert_one(params).inserted_id
+    return create_user_profile({
         'userid': adminid,
         'profileid': profileid
-    })    
+    })
+
 
 def get_admin_by_id(adminid: str):
-    admin = mongo.db.usuario.find_one(ObjectId(adminid))
+    admin = mongo.db.users.find_one(ObjectId(adminid))
     if not admin:
-        raise HTTPException('Admin not found')
+        raise HTTPException('Administrador no encontrado')
     return admin
 
+
 def get_admins():
-    return list(mongo.db.perfil_usuario.aggregate(
-        [{
+    return list(mongo.db.user_profiles.aggregate([
+        {
             '$lookup': {
-                'from': 'perfil', 
+                'from': 'profiles', 
                 'localField': 'profileid', 
                 'foreignField': '_id', 
                 'as': 'profile'
@@ -42,7 +49,7 @@ def get_admins():
             }
         }, {
             '$lookup': {
-                'from': 'usuario', 
+                'from': 'users', 
                 'localField': 'userid', 
                 'foreignField': '_id', 
                 'as': 'user'
@@ -69,37 +76,34 @@ def get_admins():
             }
         }]))
 
-def verify_if_admin_exists(data: list):
-    return mongo.db.usuario.find_one({'$or': data})
 
-def update_admin(adminid, data):
+def update_admin(adminid, params):
     adminid = ObjectId(adminid)
-    admin = mongo.db.usuario.find_one({'_id': adminid})
+    admin = mongo.db.users.find_one(adminid)
     if not admin:
-        raise HTTPException('Admin was not found')
+        raise HTTPException('Administrador no encontrado')
     
     verify_data = [
-        {'username': data['username']\
-         if admin['username'] != data['username'] else ''},
-        {'email': data['email']\
-         if admin['email'] != data['email'] else ''},
-        {'document': data['document']\
-         if admin['document'] != data['document'] else ''}
+        {'username': params['username']\
+         if admin['username'] != params['username'] else ''},
+        {'email': params['email']\
+         if admin['email'] != params['email'] else ''},
+        {'document': params['document']\
+         if admin['document'] != params['document'] else ''}
     ]
 
     if verify_if_admin_exists(verify_data):
-        raise HTTPException('User already registered')
+        raise HTTPException('El usuario ya existe')
     
-    data['updated_at'] = datetime.now()
+    params['updated_at'] = datetime.now()
 
     # Se evita que al actualizar se reinicie la contraseña de manera
     # no deseada
-    if data['password'] == '':
-        data.pop('password')
+    if params['password'] == '':
+        params.pop('password')
 
-    updated = mongo.db.usuario.update_one({'_id': adminid}, {'$set': data})
-
+    updated = mongo.db.users.update_one({'_id': adminid}, {'$set': params})
     if not updated:
-        raise HTTPException('User not found')
-    return admin
+        raise HTTPException('Administrador no encontrado')
+    return updated
 

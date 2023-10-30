@@ -1,23 +1,29 @@
-from app.schemas.comment import CommentOut
+from app.schemas.delivery import DeliveryOut
 from app.schemas.generic import DefaultAuto
 from apiflask import Schema, fields
+from app.schemas.link import LinkIn, LinkOut
+from app.schemas.file import FileOut
 
 
-class PublicationIn(DefaultAuto):
+class ActivityIn(DefaultAuto):
     title = fields.String()
     description = fields.String()
-    isActivity = fields.Boolean(required=False, load_default=False)
-    status = fields.Boolean(required=False, load_default=True)
+    status = fields.Boolean(required=False)
+    links = fields.List(fields.String, required=False)
+    files = fields.List(fields.File, required=False)
 
-class PublicationOut(DefaultAuto):
+
+class ActivityOut(DefaultAuto):
     title = fields.String()
     description = fields.String()
     created_at = fields.String()
     fullname = fields.String()
     username = fields.String()
     status = fields.Boolean()
-    isActivity = fields.Boolean()
-    comments = fields.List(fields.Nested(CommentOut))
+    delivery = fields.Nested(DeliveryOut)
+    links = fields.List(fields.Nested(LinkOut))
+    files = fields.List(fields.Nested(FileOut))
 
-class Publications(Schema):
-    items = fields.List(fields.Nested(PublicationOut))
+
+class Activities(Schema):
+    items = fields.List(fields.Nested(ActivityOut))

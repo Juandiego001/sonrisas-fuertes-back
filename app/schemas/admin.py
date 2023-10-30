@@ -1,6 +1,7 @@
 from apiflask import Schema, fields
 from app.schemas.generic import DefaultAuto
 
+
 class AdminIn(DefaultAuto):
     name = fields.String()
     lastname = fields.String()
@@ -10,6 +11,7 @@ class AdminIn(DefaultAuto):
     email = fields.String()
     status = fields.String(load_default='PENDING', allow_none=True)
 
+
 class AdminOut(DefaultAuto):
     name = fields.String()
     lastname = fields.String()
@@ -18,7 +20,8 @@ class AdminOut(DefaultAuto):
     email = fields.String()
     status = fields.String()
     fullname = fields.Function(
-        lambda teacher: f'{teacher["name"]} {teacher["lastname"]}')
+        lambda admin: f'{admin["name"]} {admin["lastname"]}')
+
 
 class Admins(Schema):
     items = fields.List(fields.Nested(AdminOut))

@@ -2,7 +2,12 @@ from datetime import datetime
 from werkzeug.exceptions import HTTPException
 from app import mongo
 from bson import ObjectId
-from app.services.profile_user import create_profile_user
+from app.services.profile_user import create_user_profile
+
+
+def verify_if_student_exists(params: list):
+    return mongo.db.users.find_one({'$or': params})
+
 
 def create_student(params: dict):
     student = verify_if_student_exists([
@@ -14,25 +19,26 @@ def create_student(params: dict):
         raise HTTPException('El usuario ya existe')
     params['status'] = 'PENDING'
     params['updated_at'] = datetime.now()
-    profileid = mongo.db.perfil.find_one({'name': 'Estudiante'})['_id']
-    studentid = mongo.db.usuario.insert_one(params).inserted_id
-    return create_profile_user({
+    profileid = mongo.db.profiles.find_one({'name': 'Estudiante'})['_id']
+    studentid = mongo.db.users.insert_one(params).inserted_id
+    return create_user_profile({
         'userid': studentid,
         'profileid': profileid
     })
         
 
 def get_student_by_id(studentid: str):
-    student = mongo.db.usuario.find_one(ObjectId(studentid))
+    student = mongo.db.users.find_one(ObjectId(studentid))
     if not student:
-        raise HTTPException('Student not found')
+        raise HTTPException('Estudiante no encontrado')
     return student
+
 
 def get_students(query: dict = {}):
     return list(mongo.db.perfil_usuario.aggregate(
         [{
             '$lookup': {
-                'from': 'perfil', 
+                'from': 'profiles', 
                 'localField': 'profileid', 
                 'foreignField': '_id', 
                 'as': 'profile'
@@ -43,7 +49,7 @@ def get_students(query: dict = {}):
             }
         }, {
             '$lookup': {
-                'from': 'usuario', 
+                'from': 'users', 
                 'localField': 'userid', 
                 'foreignField': '_id', 
                 'as': 'user'
@@ -80,40 +86,33 @@ def get_students(query: dict = {}):
             }
         }]))
 
-def verify_if_student_exists(data: list):
-    return mongo.db.usuario.find_one({'$or': data})
 
-def update_student(studentid, data):
+def update_student(studentid, params):
     studentid = ObjectId(studentid)
-    student = mongo.db.usuario.find_one({'_id': studentid})
+    student = mongo.db.users.find_one({'_id': studentid})
     if not student:
-        raise HTTPException('Student was not found')
+        raise HTTPException('Estudiante no encontrado')
 
     verify_data = [
-        {'username': data['username']\
-         if student['username'] != data['username'] else ''},
-        {'email': data['email']\
-         if student['email'] != data['email'] else ''},
-        {'document': data['document']\
-         if student['document'] != data['document'] else ''}
+        {'username': params['username']\
+         if student['username'] != params['username'] else ''},
+        {'email': params['email']\
+         if student['email'] != params['email'] else ''},
+        {'document': params['document']\
+         if student['document'] != params['document'] else ''}
     ]
 
     if verify_if_student_exists(verify_data):
-        raise HTTPException('User already registered')
+        raise HTTPException('El usuario ya existe')
     
-    data['updated_at'] = datetime.now()
+    params['updated_at'] = datetime.now()
 
     # Se evita que al actualizar se reinicie la contraseña de manera
     # no deseada
-    if data['password'] == '':
-        data.pop('password')
+    if params['password'] == '':
+        params.pop('password')
 
-    updated = mongo.db.usuario.update_one({'_id': studentid}, {'$set': data})
-    
+    updated = mongo.db.users.update_one({'_id': studentid}, {'$set': params})
     if not updated:
-        raise HTTPException('User not found')
-    return student
-
-def get_students_by_group(groupid: str):
-    return get_students(
-        {'user.groupid': ObjectId(groupid) if groupid else None})
+        raise HTTPException('El estudiante no fue actualizado')
+    return updated
