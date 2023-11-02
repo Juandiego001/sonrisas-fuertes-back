@@ -1,7 +1,7 @@
 from datetime import datetime
 import hashlib
 from app import mongo, dbx
-from app.services.publication import verify_publication_exists
+from app.services import publication
 from bson import ObjectId
 from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
@@ -30,7 +30,7 @@ def upload_comment_file(commentid, file, updated_by):
 
 
 def create_comment(params: dict):
-    if not verify_publication_exists(params['publicationid']):
+    if not publication.verify_publication_exists(params['publicationid']):
         raise HTTPException('Publicación no encontrada')
     
     params['userid'] = ObjectId(params['userid'])

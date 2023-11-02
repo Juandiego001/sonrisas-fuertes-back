@@ -2,13 +2,13 @@ from datetime import datetime
 from app import mongo
 from bson import ObjectId
 from werkzeug.exceptions import HTTPException
-from app.services.file import put_file
-from app.services.link import create_multiple_links
+from app.services import file as fileService
+from app.services import link as linkService
 
 
 def save_activity_files(activityid: str, files: list):
     for file in files:
-        put_file({'activityid': ObjectId(activityid), 'file': file})
+        fileService.put_file({'activityid': ObjectId(activityid), 'file': file})
 
 
 def save_activity_links(activityid: str, param_links: list):
@@ -18,7 +18,7 @@ def save_activity_links(activityid: str, param_links: list):
         link['created_at'] = link['updated_at'] = datetime.now()
         link['status'] = True
         links.append(link)
-    create_multiple_links(links)
+    linkService.create_multiple_links(links)
 
 
 def create_activity(params: dict):
@@ -32,10 +32,8 @@ def create_activity(params: dict):
     activityid = mongo.db.activities.insert_one(params).inserted_id
     if not activityid:
         raise HTTPException('La actividad no fue creada')
-
     if len(files):
         save_activity_files(activityid, files)
-
     if len(links):
         save_activity_links(activityid, links)
     return activityid
@@ -252,15 +250,28 @@ def get_activity_by_id(activityid: str, username: str):
     return get_activity(activityid, username)
 
 
+def delete_activity_attachments(activityid: str):
+    files = list(mongo.db.files.find({'activityid': ObjectId(activityid)}))
+    for file in files:
+        fileService.delete_file(file['_id'])
+    links = mongo.db.links.find({'activityid': ObjectId(activityid)})
+    for link in links:
+        linkService.delete_link(link['_id'])
+
+
 def update_activity(activityid: str, params: dict):
     if not verify_activity_exists(activityid):
         raise HTTPException('Actividad no encontrada')
-    files = params.pop('files') if 'files' in params else []
-    links = params.pop('links') if 'links' in params else []
-    if len(files):
-        save_activity_files(activityid, files)
-    if len(links):
-        save_activity_links(activityid, links)
+    if 'status' in params and params['status'] == False:
+        delete_activity_attachments(activityid)
+    else:
+        files = params.pop('files') if 'files' in params else []
+        links = params.pop('links') if 'links' in params else []
+        if len(files):
+            save_activity_files(activityid, files)
+        if len(links):
+            save_activity_links(activityid, links)
+
     params['updated_at'] = datetime.now()
     updated = mongo.db.activities.update_one(
         {'_id': ObjectId(activityid)}, {'$set': params})

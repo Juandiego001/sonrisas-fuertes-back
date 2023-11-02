@@ -55,4 +55,15 @@ def update_link(linkid, data):
         abort(404, ex.description)
     except Exception as ex:
         abort(500, str(ex))
-    
+
+
+@bp.delete('/<string:linkid>')
+@bp.output(Message)
+def delete_link(linkid):
+    try:
+        link.delete_link(linkid)
+        return success_message()
+    except HTTPException as ex:
+        abort(404, ex.description)
+    except Exception as ex:
+        abort(500, str(ex))

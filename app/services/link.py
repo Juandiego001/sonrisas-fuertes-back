@@ -38,3 +38,15 @@ def update_link(linkid: str, params: dict):
     if not updated:
         raise HTTPException('El enlace no fue actualizado')
     return updated
+
+
+def delete_link(linkid: str):
+    link = verify_link_exists(linkid)
+    if not link:
+        raise HTTPException('Enlace no encontrado')
+    was_deleted = mongo.db.links.delete_one({'_id': ObjectId(linkid)})
+    if not was_deleted:
+        raise HTTPException('Enlace no eliminado de la base de datos')
+    return was_deleted
+
+    

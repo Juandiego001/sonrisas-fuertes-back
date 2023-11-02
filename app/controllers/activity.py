@@ -61,7 +61,7 @@ def get_activity_detail(activityid):
 
 
 @bp.patch('/<string:activityid>')
-@bp.input(ActivityIn, location='form_and_files')
+@bp.input(ActivityIn, location='files')
 @bp.output(Message)
 @jwt_required()
 def update_activity(activityid, files_data):
@@ -70,6 +70,8 @@ def update_activity(activityid, files_data):
     :param data:
     '''
     try:
+        # Se implementó este código por la imposibilidad de enviar
+        # un arreglo de strings a través del esquema de entrada
         if 'links' in files_data:
             files_data['links'] = \
                 [json.loads(link) for link in files_data['links']]

@@ -1,7 +1,7 @@
 from app.schemas.delivery import DeliveryOut
 from app.schemas.generic import DefaultAuto
 from apiflask import Schema, fields
-from app.schemas.link import LinkIn, LinkOut
+from app.schemas.link import LinkOut
 from app.schemas.file import FileOut
 
 

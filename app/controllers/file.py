@@ -73,3 +73,14 @@ def update_file(fileid, data):
     except Exception as ex:
         abort(500, str(ex))
     
+
+@bp.delete('/<string:fileid>')
+@bp.output(Message)
+def delete_file(fileid):
+    try:
+        file.delete_file(fileid)
+        return success_message()
+    except HTTPException as ex:
+        abort(404, ex.description)
+    except Exception as ex:
+        abort(500, str(ex))

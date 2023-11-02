@@ -94,3 +94,19 @@ def update_file(fileid: str, params: dict):
     if not updated:
         raise HTTPException('El archivo no fue actualizado')
     return updated
+
+
+def delete_file(fileid: str):
+    file = verify_file_exists(fileid)
+    if not file:
+        raise HTTPException('Archivo no encontrado')
+    dbx_folder_name, dbx_folder_id, _ = get_dbx_folder(file)
+    was_deleted = dbx.files_delete(
+        f'/{dbx_folder_name}/{dbx_folder_id}/{file["hash_name"]}')
+    if not was_deleted:
+        raise HTTPException('Archivo no eliminado')
+    was_deleted = mongo.db.files.delete_one({'_id': ObjectId(fileid)})
+    if not was_deleted:
+        raise HTTPException('Archivo no eliminado de la base de datos')
+    return was_deleted
+
