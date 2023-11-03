@@ -1,3 +1,4 @@
+import json
 from flask_jwt_extended import get_jwt, jwt_required
 from werkzeug.exceptions import HTTPException
 from apiflask import APIBlueprint, abort
@@ -49,8 +50,7 @@ def get_comment_detail(commentid):
     Get comment detail
     '''
     try:
-        return CommentOut().dump(
-            comment.get_comment_by_id(commentid))
+        return comment.get_comment_by_id(commentid)
     except HTTPException as ex:
         abort(404, ex.description)
     except Exception as ex:
@@ -58,33 +58,25 @@ def get_comment_detail(commentid):
 
 
 @bp.patch('/<string:commentid>')
-@bp.input(CommentIn)
+@bp.input(CommentIn, location='files')
 @bp.output(Message)
-def update_comment(commentid, data):
+@jwt_required()
+def update_comment(commentid, files_data):
     '''
     Update comments
     :param data:
     '''
     try:
-        comment.update_comment(commentid, data)
+        # Se implementó este código por la imposibilidad de enviar
+        # un arreglo de strings a través del esquema de entrada
+        if 'links' in files_data:
+            files_data['links'] = \
+                [json.loads(link) for link in files_data['links']]
+            files_data['updated_by'] = get_jwt()['username']
+        comment.update_comment(commentid, files_data)
         return success_message()
     except HTTPException as ex:
         abort(404, ex.description)
     except Exception as ex:
         abort(500, str(ex))
 
-
-@bp.delete('/<string:commentid>')
-@bp.output(Message)
-@jwt_required()
-def delete_comment(commentid):
-    '''
-    Delete comments
-    '''
-    try:
-        comment.delete_comment(commentid)
-        return success_message()
-    except HTTPException as ex:
-        abort(404, ex.description)
-    except Exception as ex:
-        abort(500, str(ex))

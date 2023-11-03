@@ -1,100 +1,130 @@
 from datetime import datetime
-import hashlib
-from app import mongo, dbx
+from app import mongo
 from app.services import publication
 from bson import ObjectId
 from werkzeug.exceptions import HTTPException
-from werkzeug.utils import secure_filename
-from app.utils import generate_id
+from app.services import file as fileService
+from app.services import link as linkService
 
 
-def upload_comment_file(commentid, file, updated_by):
-    filename = secure_filename(file.filename)
-    format = filename.split('.')[-1]
-    hash_name = (f'{hashlib.sha1(generate_id().encode("utf-8")).hexdigest()}.'
-                 f'{format}')
-    dbx.files_upload(file.read(), f'/comments/{commentid}/{hash_name}')
-    url = f'{hash_name}?v={generate_id()}'
-    return mongo.db.attachments.insert_one({
-        'commentid': ObjectId(commentid),
-        'folderid': None,
-        'publicationid': None,
-        'hash_name': hash_name,
-        'real_name': filename,
-        'url': url,
-        'status': True,
-        'created_at': datetime.now(),
-        'updated_at': datetime.now(),
-        'updated_by': updated_by
-    })
+def save_comment_files(commentid: str, files: list):
+    for file in files:
+        fileService.put_file({'commentid': ObjectId(commentid), 'file': file})
+
+
+def save_comment_links(commentid: str, param_links: list):
+    links = []
+    for link in param_links:
+        link['commentid'] = ObjectId(commentid)
+        link['created_at'] = link['updated_at'] = datetime.now()
+        link['status'] = True
+        links.append(link)
+    linkService.create_multiple_links(links)
 
 
 def create_comment(params: dict):
     if not publication.verify_publication_exists(params['publicationid']):
         raise HTTPException('Publicación no encontrada')
-    
     params['userid'] = ObjectId(params['userid'])
     params['created_at'] = datetime.now()
     params['updated_at'] = datetime.now()
     params['status'] = True
-
-    files = []
-    if 'files' in params:
-        files = params.pop('files')
-
-    links = []
-    if 'links' in params:
-        links = params.pop('links')
+    files = params.pop('files') if 'files' in params else []
+    links = params.pop('links') if 'links' in params else []
 
     commentid = mongo.db.comments.insert_one(params).inserted_id
-
+    if not commentid:
+        raise HTTPException('El comentario no fue creado')
     if len(files):
-        for file in files:
-            upload_comment_file(commentid, file, params['updated_by'])
-    
+        save_comment_files(commentid, files)
     if len(links):
-        mongo.db.attachments.insert_many([{
-            'commentid': ObjectId(commentid),
-            'folderid': None,
-            'publicationid': None,
-            'hash_name': None,
-            'real_name': None,
-            'url': link,
-            'isLink': True,
-            'status': True,
-            'created_at': datetime.now(),
-            'updated_at': datetime.now(),
-            'updated_by': params['updated_by']
-        } for link in links])
-
+        save_comment_links(commentid, links)
     return commentid
 
 
 def get_comments():
-    return mongo.db.comments.find({})
+    return list(mongo.db.comments.find({}))
 
 
-def verify_comment_exists(publicationid: str):
-    return mongo.db.comments.find_one(ObjectId(publicationid))
+def get_comment(commentid: str):
+    return mongo.db.comments.aggregate([
+        {
+          '$lookup': {
+            'from': 'links',
+            'localField': '_id',
+            'foreignField': 'commentid',
+            'as': 'links'
+          }
+        },
+        {
+          '$lookup': {
+            'from': 'files',
+            'localField': '_id',
+            'foreignField': 'commentid',
+            'as': 'files'
+          }
+        },
+        {
+          '$match': {
+            '$expr': {
+              '$eq': [
+                '$_id', ObjectId(commentid)]
+            }
+          }
+        },
+        {
+          '$project': {
+            '_id': 1,
+            'description': 1,
+            'updated_at': 1,
+            'updated_by': 1,
+            'created_at': 1,
+            'files': 1,
+            'links': 1
+          }
+        }
+    ]).next()
+
+
+def verify_comment_exists(commentid: str):
+    return mongo.db.comments.find_one(ObjectId(commentid))
 
 
 def get_comment_by_id(commentid: str):
     comment = verify_comment_exists(commentid)
     if not comment:
         raise HTTPException('Comentario no encontrado')
-    return comment
+    return get_comment(commentid)
+
+
+def delete_comment_attachments(commentid: str):
+    files = list(mongo.db.files.find(
+        {'commentid': ObjectId(commentid)}))
+    for file in files:
+        fileService.delete_file(file['_id'])
+    links = mongo.db.links.find({'commentid': ObjectId(commentid)})
+    for link in links:
+        linkService.delete_link(link['_id'])
 
 
 def update_comment(commentid: str, params: dict):
     if not verify_comment_exists(commentid):
         raise HTTPException('Comentario no encontrado')
-    
+    if 'status' in params and params['status'] == False:
+        delete_comment_attachments(commentid)
+    else:
+        files = params.pop('files') if 'files' in params else []
+        links = params.pop('links') if 'links' in params else []
+        if len(files):
+            save_comment_files(commentid, files)
+        if len(links):
+            save_comment_links(commentid, links)
+
     params['updated_at'] = datetime.now()
     updated = mongo.db.comments.update_one(
         {'_id': ObjectId(commentid)}, {'$set': params})
     if not updated:
         raise HTTPException('El comentario no fue actualizado')
-    
     return updated
 
 

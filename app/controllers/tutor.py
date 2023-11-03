@@ -1,23 +1,23 @@
 from werkzeug.exceptions import HTTPException
 from apiflask import APIBlueprint, abort
 from flask_jwt_extended import get_jwt, jwt_required
-from app.schemas.student import StudentIn, StudentOut, Students
-from app.services import student
+from app.schemas.tutor import TutorIn, TutorOut, Tutors
 from app.schemas.generic import Message
+from app.services import tutor
 from app.utils import success_message
 
 
-bp = APIBlueprint('student', __name__)
+bp = APIBlueprint('tutor', __name__)
 
 
 @bp.post('/')
-@bp.input(StudentIn)
+@bp.input(TutorIn)
 @bp.output(Message)
 @jwt_required()
-def create_student(data):
+def create_tutor(data):
     try:
         data['updated_by'] = get_jwt()['username']
-        student.create_student(data)
+        tutor.create_tutor(data)
         return success_message()
     except HTTPException as ex:
         abort(400, ex.description)
@@ -25,11 +25,11 @@ def create_student(data):
         abort(500, str(ex))
 
 
-@bp.get('/<string:studentid>')
-@bp.output(StudentOut)
-def get_student_detail(studentid):
+@bp.get('/<string:tutorid>')
+@bp.output(TutorOut)
+def get_tutor_detail(tutorid):
     try:
-        return student.get_student_by_id(studentid)
+        return tutor.get_tutor_by_id(tutorid)
     except HTTPException as ex:
         abort(400, ex.description)
     except Exception as ex:
@@ -37,24 +37,25 @@ def get_student_detail(studentid):
 
 
 @bp.get('/')
-@bp.output(Students)
-def get_students():
+@bp.output(Tutors)
+def get_tutors():
     try:
-        return Students().dump({'items': student.get_students()})
+        return Tutors().dump({'items': tutor.get_tutors()})
     except Exception as ex:
         abort(500, str(ex))
 
 
-@bp.patch('/<string:studentid>')
-@bp.input(StudentIn)
+@bp.patch('/<string:tutorid>')
+@bp.input(TutorIn)
 @bp.output(Message)
 @jwt_required()
-def update_student(studentid, data):
+def update_tutor(tutorid, data):
     try:
         data['updated_by'] = get_jwt()['username']
-        student.update_student(studentid, data)
+        tutor.update_tutor(tutorid, data)
         return success_message()
-    except HTTPException as ex:        
+    except HTTPException as ex:
         abort(400, ex.description)
     except Exception as ex:
         abort(500, str(ex))
+

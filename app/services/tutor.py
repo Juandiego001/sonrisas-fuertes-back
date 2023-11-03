@@ -5,36 +5,36 @@ from bson import ObjectId
 from app.services.profile_user import create_user_profile
 
 
-def verify_if_teacher_exists(params: list):
+def verify_if_tutor_exists(params: list):
     return mongo.db.users.find_one({'$or': params})
 
 
-def create_teacher(params: dict):
-    teacher = verify_if_teacher_exists([
+def create_tutor(params: dict):
+    tutor = verify_if_tutor_exists([
         {'username': params['username']},
         {'email': params['email']},
         {'document': params['document']},
     ])
-    if teacher:
+    if tutor:
         raise HTTPException('El usuario ya existe')
     params['status'] = 'PENDING'
     params['updated_at'] = datetime.now()
-    profileid = mongo.db.profiles.find_one({'name': 'Profesor'})['_id']
-    teacherid = mongo.db.users.insert_one(params).inserted_id
+    profileid = mongo.db.profiles.find_one({'name': 'Acudiente'})['_id']
+    tutorid = mongo.db.users.insert_one(params).inserted_id
     return create_user_profile({
-        'userid': teacherid,
+        'userid': tutorid,
         'profileid': profileid
     })    
 
 
-def get_teacher_by_id(teacherid: str):
-    teacher = mongo.db.users.find_one(ObjectId(teacherid))
-    if not teacher:
-        raise HTTPException('Profesor no encontrado')
-    return teacher
+def get_tutor_by_id(tutorid: str):
+    tutor = mongo.db.users.find_one(ObjectId(tutorid))
+    if not tutor:
+        raise HTTPException('Acudiente no encontrado')
+    return tutor
 
 
-def get_teachers():
+def get_tutors():
     return list(mongo.db.user_profiles.aggregate(
         [{
             '$lookup': {
@@ -60,7 +60,7 @@ def get_teachers():
             }
         }, {
             '$match': {
-                'profile.name': 'Profesor'
+                'profile.name': 'Acudiente'
             },
         }, {
             '$project': {
@@ -70,6 +70,9 @@ def get_teachers():
                 'document': '$user.document',
                 'username': '$user.username',
                 'email': '$user.email',
+                'kinship': '$user.kinship',
+                'phone': '$user.phone',
+                'regime': '$user.regime',
                 'status': '$user.status',
                 'updated_by': '$user.updated_by',
                 'updated_at': '$user.updated_at',
@@ -77,22 +80,22 @@ def get_teachers():
         }]))
 
 
-def update_teacher(teacherid, params):
-    teacherid = ObjectId(teacherid)
-    teacher = mongo.db.users.find_one(teacherid)
-    if not teacher:
-        raise HTTPException('Profesor no encontrado')
+def update_tutor(tutorid, params):
+    tutorid = ObjectId(tutorid)
+    tutor = mongo.db.users.find_one(tutorid)
+    if not tutor:
+        raise HTTPException('Acudiente no encontrado')
     
     verify_data = [
         {'username': params['username']\
-         if teacher['username'] != params['username'] else ''},
+         if tutor['username'] != params['username'] else ''},
         {'email': params['email']\
-         if teacher['email'] != params['email'] else ''},
+         if tutor['email'] != params['email'] else ''},
         {'document': params['document']\
-         if teacher['document'] != params['document'] else ''}
+         if tutor['document'] != params['document'] else ''}
     ]
 
-    if verify_if_teacher_exists(verify_data):
+    if verify_if_tutor_exists(verify_data):
         raise HTTPException('El usuario ya existe')
     
     params['updated_at'] = datetime.now()
@@ -102,9 +105,9 @@ def update_teacher(teacherid, params):
     if params['password'] == '':
         params.pop('password')
 
-    updated = mongo.db.users.update_one({'_id': teacherid}, {'$set': params})
+    updated = mongo.db.users.update_one({'_id': tutorid}, {'$set': params})
 
     if not updated:
-        raise HTTPException('Profesor no encontrado')
+        raise HTTPException('Acudiente no encontrado')
     return updated
 
