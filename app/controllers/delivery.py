@@ -1,3 +1,4 @@
+import json
 from flask_jwt_extended import get_jwt, jwt_required
 from werkzeug.exceptions import HTTPException
 from apiflask import APIBlueprint, abort
@@ -11,18 +12,21 @@ bp = APIBlueprint('delivery', __name__)
 
 
 @bp.post('/')
-@bp.input(DeliveryIn, location='form_and_files')
+@bp.input(DeliveryIn, location='files')
 @bp.output(Message)
 @jwt_required()
-def create_delivery(form_and_files_data):
+def create_delivery(files_data):
     '''
     Create delivery for activities
     :param data:
     '''
     try:
-        form_and_files_data['userid'] = get_jwt()['_id']
-        form_and_files_data['updated_by'] = get_jwt()['username']
-        delivery.create_delivery(form_and_files_data)
+        files_data['userid'] = get_jwt()['_id']
+        if 'links' in files_data:
+            files_data['links'] = \
+                [json.loads(link) for link in files_data['links']]
+        files_data['updated_by'] = get_jwt()['username']
+        delivery.create_delivery(files_data)
         return success_message()
     except HTTPException as ex:
         abort(404, ex.description)

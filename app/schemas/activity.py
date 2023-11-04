@@ -20,7 +20,26 @@ class ActivityOut(DefaultAuto):
     fullname = fields.String()
     username = fields.String()
     status = fields.Boolean()
+    links = fields.List(fields.Nested(LinkOut))
+    files = fields.List(fields.Nested(FileOut))
+
+
+class ActivityDeliveryOut(ActivityOut):
     delivery = fields.Nested(DeliveryOut)
+
+
+class ActivityDeliveriesOut(ActivityOut):
+    deliveries = fields.List(fields.Nested(DeliveryOut))
+
+
+class ActivityDeliveriesOut(ActivityOut):
+    title = fields.String()
+    description = fields.String()
+    created_at = fields.String()
+    fullname = fields.String()
+    username = fields.String()
+    status = fields.Boolean()
+    deliveries = fields.List(fields.Nested(DeliveryOut))
     links = fields.List(fields.Nested(LinkOut))
     files = fields.List(fields.Nested(FileOut))
 

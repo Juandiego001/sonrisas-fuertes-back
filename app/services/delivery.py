@@ -5,6 +5,8 @@ from app.services import activity
 from bson import ObjectId
 from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
+from app.services import file as fileService
+from app.services import link as linkService
 from app.utils import generate_id
 
 
@@ -29,6 +31,21 @@ def upload_delivery_file(deliveryid, file, updated_by):
     })
 
 
+def save_delivery_files(deliveryid: str, files: list):
+    for file in files:
+        fileService.put_file({'deliveryid': ObjectId(deliveryid), 'file': file})
+
+
+def save_delivery_links(deliveryid: str, param_links: list):
+    links = []
+    for link in param_links:
+        link['deliveryid'] = ObjectId(deliveryid)
+        link['created_at'] = link['updated_at'] = datetime.now()
+        link['status'] = True
+        links.append(link)
+    linkService.create_multiple_links(links)
+
+
 def create_delivery(params: dict):
     if not activity.verify_activity_exists(params['activityid']):
         raise HTTPException('Actividad no encontrada')
@@ -37,36 +54,16 @@ def create_delivery(params: dict):
     params['created_at'] = datetime.now()
     params['updated_at'] = datetime.now()
     params['status'] = True
-
-    files = []
-    if 'files' in params:
-        files = params.pop('files')
-
-    links = []
-    if 'links' in params:
-        links = params.pop('links')
+    files = params.pop('files') if 'files' in params else []
+    links = params.pop('links') if 'links' in params else []
 
     deliveryid = mongo.db.deliveries.insert_one(params).inserted_id
-
+    if not deliveryid:
+        raise HTTPException('La entrega no fue creada')
     if len(files):
-        for file in files:
-            upload_delivery_file(deliveryid, file, params['updated_by'])
-    
+        save_delivery_files(deliveryid, files)
     if len(links):
-        mongo.db.attachments.insert_many([{
-            'deliveryid': ObjectId(deliveryid),
-            'folderid': None,
-            'activityid': None,
-            'hash_name': None,
-            'real_name': None,
-            'url': link,
-            'isLink': True,
-            'status': True,
-            'created_at': datetime.now(),
-            'updated_at': datetime.now(),
-            'updated_by': params['updated_by']
-        } for link in links])
-
+        save_delivery_links(deliveryid, links)
     return deliveryid
 
 

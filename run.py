@@ -9,6 +9,7 @@ from app.controllers.resource import bp as bp_resource
 from app.controllers.permission import bp as bp_permission
 from app.controllers.publication import bp as bp_publication
 from app.controllers.comment import bp as bp_comment
+from app.controllers.delivery import bp as bp_delivery
 from app.controllers.folder import bp as bp_folder
 from app.controllers.activity import bp as bp_activity
 from app.controllers.link import bp as bp_link
@@ -25,6 +26,7 @@ app.register_blueprint(bp_resource, url_prefix='/api/resource')
 app.register_blueprint(bp_permission, url_prefix='/api/permission')
 app.register_blueprint(bp_publication, url_prefix='/api/publication')
 app.register_blueprint(bp_comment, url_prefix='/api/comment')
+app.register_blueprint(bp_delivery, url_prefix='/api/delivery')
 app.register_blueprint(bp_folder, url_prefix='/api/folder')
 app.register_blueprint(bp_activity, url_prefix='/api/activity')
 app.register_blueprint(bp_link, url_prefix='/api/link')
