@@ -120,7 +120,6 @@ def get_profile():
 @bp.output(Message)
 def upload_photo(username, files):
     try:
-        print('username********', username)
         account.upload_photo(username, files['photo'])
         return success_message()
     except HTTPException as ex:

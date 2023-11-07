@@ -7,8 +7,8 @@ class CommentIn(DefaultAuto):
     publicationid = ObjectId()
     description = fields.String()
     status = fields.Boolean()
-    files = fields.List(fields.File, required=False)
     links = fields.List(fields.String, required=False)
+    files = fields.List(fields.File, required=False)
 
 class CommentOut(DefaultAuto):
     description = fields.String()

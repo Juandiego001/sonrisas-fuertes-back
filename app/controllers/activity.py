@@ -53,10 +53,8 @@ def get_activity_detail_with_one_delivery(activityid):
     Get activity detail with one delivery
     '''
     try:
-        act = activity.get_activity_by_id_delivery(
-            activityid, get_jwt()['username']).next()
-        print('act', act)
-        return act
+        return activity.get_activity_by_id_delivery(
+            activityid, get_jwt()['username'])
     except HTTPException as ex:
         abort(404, ex.description)
     except Exception as ex:
@@ -71,8 +69,7 @@ def get_activity_detail_with_all_deliveries(activityid):
     Get activity detail with all deliveries 
     '''
     try:
-        return activity.get_activity_by_id(
-            activityid, get_jwt()['username']).next()
+        return activity.get_activity_by_id_deliveries(activityid)
     except HTTPException as ex:
         abort(404, ex.description)
     except Exception as ex:

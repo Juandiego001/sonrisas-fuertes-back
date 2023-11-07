@@ -131,13 +131,16 @@ def get_activity_delivery(activityid: str, username: str):
             'from': 'deliveries',
             'localField': '_id',
             'foreignField': 'activityid',
+            'let': {
+                'delivery_status': '$status'
+            },
             'pipeline': [
               {
                 '$lookup': {
                   'from': 'users',
                   'localField': 'userid',
                   'foreignField': '_id',
-                  'as': 'user'
+                  'as': 'user_delivery'
                 }
               },
               {
@@ -158,7 +161,7 @@ def get_activity_delivery(activityid: str, username: str):
               },
               {
                 '$unwind': {
-                  'path': '$user'
+                  'path': '$user_delivery'
                 }
               },
               {
@@ -167,12 +170,12 @@ def get_activity_delivery(activityid: str, username: str):
                         '$and': [
                             {
                                 '$eq': [
-                                    '$status', True
+                                    '$$delivery_status', True
                                 ]
                             },
                             {
                                 '$eq': [
-                                    '$user.username', username
+                                    '$user_delivery.username', username
                                 ]
                             }
                         ]
@@ -185,10 +188,10 @@ def get_activity_delivery(activityid: str, username: str):
                   'description': 1,
                   'status': 1,
                   'created_at': 1,
-                  'username': '$user.username',
+                  'username': '$user_delivery.username',
                   'links': 1,
                   'files': 1,
-                  'fullname': {"$concat": ["$user.name", " ", "$user.lastname"]}
+                  'fullname': {"$concat": ["$user_delivery.name", " ", "$user_delivery.lastname"]}
                 }
               },
               {
@@ -201,7 +204,8 @@ def get_activity_delivery(activityid: str, username: str):
           }
         }, {
             '$unwind': {
-                'path': '$delivery'
+                'path': '$delivery',
+                'preserveNullAndEmptyArrays': True
             }
         }, {
             '$match': {
@@ -239,7 +243,128 @@ def get_activity_delivery(activityid: str, username: str):
                 'created_at': -1
             }
         }
-    ])
+    ]).try_next()
+
+
+def get_activity_deliveries(activityid: str):
+    return mongo.db.activities.aggregate([
+        {
+            '$lookup': {
+                'from': 'users', 
+                'localField': 'userid', 
+                'foreignField': '_id', 
+                'as': 'user'
+            }
+        }, {
+            '$unwind': {
+                'path': '$user'
+            }
+        }, {
+            '$lookup': {
+                'from': 'links', 
+                'localField': '_id', 
+                'foreignField': 'activityid', 
+                'as': 'links'
+            }
+        }, {
+            '$lookup': {
+                'from': 'files', 
+                'localField': '_id', 
+                'foreignField': 'activityid', 
+                'as': 'files'
+            }
+        }, {
+          '$lookup': {
+            'from': 'deliveries',
+            'localField': '_id',
+            'foreignField': 'activityid',
+            'pipeline': [
+              {
+                '$lookup': {
+                  'from': 'users',
+                  'localField': 'userid',
+                  'foreignField': '_id',
+                  'as': 'user_delivery'
+                }
+              },
+              {
+                 '$lookup': {
+                  'from': 'links',
+                  'localField': '_id',
+                  'foreignField': 'deliveryid',
+                  'as': 'links'
+                } 
+              },
+              {
+                '$lookup': {
+                  'from': 'files',
+                  'localField': '_id',
+                  'foreignField': 'deliveryid',
+                  'as': 'files'
+                }   
+              },
+              {
+                '$unwind': {
+                  'path': '$user_delivery'
+                }
+              },
+              {
+                '$project': {
+                  '_id': 1,
+                  'description': 1,
+                  'status': 1,
+                  'created_at': 1,
+                  'username': '$user_delivery.username',
+                  'links': 1,
+                  'files': 1,
+                  'fullname': {"$concat": ["$user_delivery.name", " ", "$user_delivery.lastname"]}
+                }
+              },
+              {
+                  '$sort': {
+                      'created_at': -1
+                  }
+              }
+              ],
+            'as': 'deliveries'
+          }
+        }, {
+            '$match': {
+                '$expr': {
+                    '$and': [
+                        {
+                            '$eq': [
+                                '$status', True
+                            ]
+                        },
+                        {
+                            '$eq': [
+                                '$_id', ObjectId(activityid)
+                            ]
+                        }
+                    ]
+                }
+            }
+        }, {
+            '$project': {
+                '_id': 1,
+                'title': 1,
+                'description': 1,
+                'created_at': 1,
+                'status': 1,
+                'deliveries': 1,
+                'username': "$user.username",
+                'links': 1,
+                'files': 1,
+                'fullname': {"$concat": ["$user.name", " ", "$user.lastname"]}
+            }
+        },
+        {
+            '$sort': {
+                'created_at': -1
+            }
+        }
+    ]).try_next()
 
 
 def get_activity(activityid: str, username: str):
@@ -391,6 +516,13 @@ def get_activity_by_id_delivery(activityid: str, username: str):
     if not activity:
         raise HTTPException('Actividad no encontrada')
     return get_activity_delivery(activityid, username)
+
+
+def get_activity_by_id_deliveries(activityid: str):
+    activity = verify_activity_exists(activityid)
+    if not activity:
+        raise HTTPException('Actividad no encontrada')
+    return get_activity_deliveries(activityid)
 
 
 def get_activity_by_id(activityid: str, username: str):

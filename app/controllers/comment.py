@@ -12,18 +12,21 @@ bp = APIBlueprint('comment', __name__)
 
 
 @bp.post('/')
-@bp.input(CommentIn, location='form_and_files')
+@bp.input(CommentIn, location='files')
 @bp.output(Message)
 @jwt_required()
-def create_comment(form_and_files_data):
+def create_comment(files_data):
     '''
     Create comment for publications
     :param data:
     '''
     try:
-        form_and_files_data['userid'] = get_jwt()['_id']
-        form_and_files_data['updated_by'] = get_jwt()['username']
-        comment.create_comment(form_and_files_data)
+        files_data['userid'] = get_jwt()['_id']
+        if 'links' in files_data:
+            files_data['links'] = \
+                [json.loads(link) for link in files_data['links']]
+        files_data['updated_by'] = get_jwt()['username']
+        comment.create_comment(files_data)
         return success_message()
     except HTTPException as ex:
         abort(404, ex.description)
@@ -72,7 +75,7 @@ def update_comment(commentid, files_data):
         if 'links' in files_data:
             files_data['links'] = \
                 [json.loads(link) for link in files_data['links']]
-            files_data['updated_by'] = get_jwt()['username']
+        files_data['updated_by'] = get_jwt()['username']
         comment.update_comment(commentid, files_data)
         return success_message()
     except HTTPException as ex:

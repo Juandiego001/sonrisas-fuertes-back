@@ -71,6 +71,71 @@ def get_deliveries():
     return mongo.db.deliveries.find({})
 
 
+def get_delivery(deliveryid: str):
+    return mongo.db.deliveries.aggregate([
+        {
+            '$lookup': {
+                'from': 'users',
+                'localField': 'userid',
+                'foreignField': '_id',
+                'as': 'user'
+            }
+        }, {
+            '$unwind': {
+                'path': '$user'
+            }
+        }, {
+            '$lookup': {
+                'from': 'links', 
+                'localField': '_id', 
+                'foreignField': 'deliveryid', 
+                'as': 'links'
+            }
+        }, {
+            '$lookup': {
+                'from': 'files', 
+                'localField': '_id', 
+                'foreignField': 'deliveryid', 
+                'as': 'files'
+            }
+        }, {
+            '$match': {
+                '$expr': {
+                    '$and': [
+                        {
+                            '$eq': [
+                                '$status', True
+                            ]
+                        },
+                        {
+                            '$eq': [
+                                '$_id', ObjectId(deliveryid)
+                            ]
+                        }
+                    ]
+                }
+            }
+        }, {
+            '$project': {
+                '_id': 1,
+                'title': 1,
+                'description': 1,
+                'created_at': 1,
+                'status': 1,
+                'username': "$user.username",
+                'links': 1,
+                'files': 1,
+                'fullname': {"$concat": ["$user.name", " ", "$user.lastname"]}
+            }
+        },
+        {
+            '$sort': {
+                'created_at': -1
+            }
+        }
+    ]).try_next()
+
+
 def verify_delivery_exists(activityid: str):
     return mongo.db.deliveries.find_one(ObjectId(activityid))
 
@@ -79,12 +144,33 @@ def get_delivery_by_id(deliveryid: str):
     delivery = verify_delivery_exists(deliveryid)
     if not delivery:
         raise HTTPException('Entrega no encontrada')
-    return delivery
+    return get_delivery(deliveryid)
+
+
+def delete_delivery_attachments(deliveryid: str):
+    files = list(mongo.db.files.find(
+        {'deliveryid': ObjectId(deliveryid)}))
+    for file in files:
+        fileService.delete_file(file['_id'])
+    links = mongo.db.links.find({'deliveryid': ObjectId(deliveryid)})
+    for link in links:
+        linkService.delete_link(link['_id'])
 
 
 def update_delivery(deliveryid: str, params: dict):
     if not verify_delivery_exists(deliveryid):
         raise HTTPException('Entrega no encontrada')
+    if 'status' in params and params['status'] == False:
+        delete_delivery_attachments(deliveryid)
+    else:
+        files = params.pop('files') if 'files' in params else []
+        links = params.pop('links') if 'links' in params else []
+        if len(files):
+            save_delivery_files(deliveryid, files)
+        if len(links):
+            save_delivery_links(deliveryid, links)
+
+
     params['updated_at'] = datetime.now()
     updated = mongo.db.deliveries.update_one(
         {'_id': ObjectId(deliveryid)}, {'$set': params})

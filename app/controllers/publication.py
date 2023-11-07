@@ -25,7 +25,6 @@ def create_publication(files_data):
         if 'links' in files_data:
             files_data['links'] = \
                 [json.loads(link) for link in files_data['links']]
-        files_data['userid'] = get_jwt()['_id']
         files_data['updated_by'] = get_jwt()['username']
         publication.create_publication(files_data)
         return success_message()
@@ -73,7 +72,7 @@ def update_publication(publicationid, files_data):
         if 'links' in files_data:
             files_data['links'] = \
                 [json.loads(link) for link in files_data['links']]
-            files_data['updated_by'] = get_jwt()['username']
+        files_data['updated_by'] = get_jwt()['username']
         publication.update_publication(publicationid, files_data)
         return success_message()
     except HTTPException as ex:

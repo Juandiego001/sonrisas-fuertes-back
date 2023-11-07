@@ -53,8 +53,7 @@ def get_delivery_detail(deliveryid):
     Get delivery detail
     '''
     try:
-        return DeliveryOut().dump(
-            delivery.get_delivery_by_id(deliveryid))
+        return delivery.get_delivery_by_id(deliveryid)
     except HTTPException as ex:
         abort(404, ex.description)
     except Exception as ex:
@@ -62,15 +61,20 @@ def get_delivery_detail(deliveryid):
 
 
 @bp.patch('/<string:deliveryid>')
-@bp.input(DeliveryIn)
+@bp.input(DeliveryIn, location='files')
 @bp.output(Message)
-def update_delivery(deliveryid, data):
+def update_delivery(deliveryid, files_data):
     '''
     Update delivery
     :param data:
     '''
     try:
-        delivery.update_delivery(deliveryid, data)
+        # Se implementó este código por la imposibilidad de enviar
+        # un arreglo de strings a través del esquema de entrada
+        if 'links' in files_data:
+            files_data['links'] = \
+                [json.loads(link) for link in files_data['links']]
+        delivery.update_delivery(deliveryid, files_data)
         return success_message()
     except HTTPException as ex:
         abort(404, ex.description)
