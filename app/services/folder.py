@@ -23,11 +23,21 @@ def get_folders():
     return list(mongo.db.folders.find({}))
 
 
+def get_folder_files(folderid: str):
+    return mongo.db.files.find({'folderid': ObjectId(folderid)})
+
+
 def get_folder_by_id(folderid: str):
     folder = verify_folder_exists_by_id(folderid)
     if not folder:
         raise HTTPException('Carpeta no encontrada')
     return folder
+
+def get_folder_files_by_id(folderid: str):
+    folder = verify_folder_exists_by_id(folderid)
+    if not folder:
+        raise HTTPException('Carpeta no encontrada')
+    return get_folder_files(folderid)
 
 
 def update_folder(folderid: str, params: dict):

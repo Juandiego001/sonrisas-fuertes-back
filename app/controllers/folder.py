@@ -1,6 +1,6 @@
 from apiflask import APIBlueprint, abort
 from flask_jwt_extended import get_jwt, jwt_required
-from app.schemas.folder import FolderIn, FolderOut, Folders
+from app.schemas.folder import FolderIn, FolderOut, FolderFilesOut, Folders
 from app.services import folder
 from app.schemas.generic import Message
 from werkzeug.exceptions import HTTPException
@@ -45,6 +45,18 @@ def get_folder_detail(folderid):
         abort(500, str(ex))
 
 
+@bp.get('/folder/files/<string:folderid>')
+@bp.output(FolderFilesOut)
+def get_files_of_folder(folderid):
+    try:
+        return FolderFilesOut().dump({'items': 
+                                      folder.get_folder_files_by_id(folderid)})
+    except HTTPException as ex:
+        abort(400, ex.description)
+    except Exception as ex:
+        abort(500, str(ex))
+
+
 @bp.patch('/<string:folderid>')
 @bp.input(FolderIn)
 @bp.output(Message)
@@ -53,7 +65,7 @@ def update_folder(folderid, data):
     try:
         data['updated_by'] = get_jwt()['username']
         folder.update_folder(folderid, data)
-        return success_message
+        return success_message()
     except HTTPException as ex:
         abort(400, ex.description)
     except Exception as ex:

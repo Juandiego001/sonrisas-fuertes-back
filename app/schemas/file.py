@@ -1,6 +1,7 @@
 from apiflask import Schema, fields
 from app.schemas.generic import DefaultAuto, ObjectId
 
+
 class FileIn(DefaultAuto):
     folderid = ObjectId(required=False, load_default=None)
     activityid = ObjectId(required=False, load_default=None)
