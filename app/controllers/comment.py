@@ -83,3 +83,18 @@ def update_comment(commentid, files_data):
     except Exception as ex:
         abort(500, str(ex))
 
+
+@bp.delete('/<string:commentid>')
+@bp.output(Message)
+@jwt_required()
+def delete_comment(commentid):
+    '''
+    Delete comment
+    '''
+    try:
+        comment.delete_comment(commentid)
+        return success_message()
+    except HTTPException as ex:
+        abort(404, ex.description)
+    except Exception as ex:
+        abort(500, str(ex))

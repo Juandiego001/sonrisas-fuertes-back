@@ -128,11 +128,22 @@ def update_comment(commentid: str, params: dict):
     return updated
 
 
+def delete_comment_attachments(commentid: str):
+    files = list(mongo.db.files.find(
+        {'commentid': ObjectId(commentid)}))
+    for file in files:
+        fileService.delete_file(file['_id'])
+    links = mongo.db.links.find({'commentid': ObjectId(commentid)})
+    for link in links:
+        linkService.delete_link(link['_id'])
+
+
 def delete_comment(commentid: str):
     if not verify_comment_exists(commentid):
         raise HTTPException('Comentario no encontrado')
     
-    deleted = mongo.db.comments.delete_one(ObjectId(commentid))
+    deleted = mongo.db.comments.delete_one({'_id': ObjectId(commentid)})
     if not deleted:
         raise HTTPException('El comentario no fue eliminado')
+    delete_comment_attachments(commentid)
     return deleted

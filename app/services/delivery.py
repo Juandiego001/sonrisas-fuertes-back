@@ -179,10 +179,21 @@ def update_delivery(deliveryid: str, params: dict):
     return updated
 
 
+def delete_delivery_attachments(deliveryid: str):
+    files = list(mongo.db.files.find(
+        {'deliveryid': ObjectId(deliveryid)}))
+    for file in files:
+        fileService.delete_file(file['_id'])
+    links = mongo.db.links.find({'deliveryid': ObjectId(deliveryid)})
+    for link in links:
+        linkService.delete_link(link['_id'])
+
+
 def delete_delivery(deliveryid: str):
     if not verify_delivery_exists(deliveryid):
         raise HTTPException('Entrega no encontrada')
     deleted = mongo.db.deliveries.delete_one({'_id': ObjectId(deliveryid)})
     if not deleted:
         raise HTTPException('La entrega no fue eliminada')
+    delete_delivery_attachments(deliveryid)
     return deleted
