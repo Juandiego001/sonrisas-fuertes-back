@@ -3,6 +3,10 @@ from app import mongo
 from bson import ObjectId
 
 
+def verify_profile_exists(profileid: str):
+    return mongo.db.profiles.find_one(ObjectId(profileid))
+
+
 def create_profile(params: dict):
     return mongo.db.profiles.insert_one(params)
 
@@ -31,6 +35,7 @@ def get_profile(profileid: str):
                             'read': 1,
                             'create': 1,
                             'update': 1,
+                            'delete': 1,
                             'module': '$module.name'
                         }
                     }

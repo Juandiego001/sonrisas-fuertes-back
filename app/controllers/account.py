@@ -98,6 +98,8 @@ def get_profile():
             get_user_permissions(username, 'create').try_next()
         update_permissions = account.\
             get_user_permissions(username, 'update').try_next()
+        delete_permissions = account.\
+            get_user_permissions(username, 'delete').try_next()
 
         user_detail['abilities'] = []
         if read_permissions:
@@ -106,6 +108,8 @@ def get_profile():
             user_detail['abilities'] += create_permissions['permissions']
         if update_permissions:
             user_detail['abilities'] += update_permissions['permissions']
+        if delete_permissions:
+            user_detail['abilities'] += delete_permissions['permissions']
             
         user_profile = Profile().dump(user_detail)
         return user_profile

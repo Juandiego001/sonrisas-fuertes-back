@@ -367,7 +367,7 @@ def get_activity_deliveries(activityid: str):
     ]).try_next()
 
 
-def get_activity(activityid: str, username: str):
+def get_activity(activityid: str):
     return mongo.db.activities.aggregate([
         {
             '$lookup': {
@@ -394,80 +394,6 @@ def get_activity(activityid: str, username: str):
                 'foreignField': 'activityid', 
                 'as': 'files'
             }
-        }, {
-          '$lookup': {
-            'from': 'deliveries',
-            'localField': '_id',
-            'foreignField': 'activityid',
-            'pipeline': [
-              {
-                '$lookup': {
-                  'from': 'users',
-                  'localField': 'userid',
-                  'foreignField': '_id',
-                  'as': 'user'
-                }
-              },
-              {
-                 '$lookup': {
-                  'from': 'links',
-                  'localField': '_id',
-                  'foreignField': 'deliveryid',
-                  'as': 'links'
-                } 
-              },
-              {
-                '$lookup': {
-                  'from': 'files',
-                  'localField': '_id',
-                  'foreignField': 'deliveryid',
-                  'as': 'files'
-                }   
-              },
-              {
-                '$unwind': {
-                  'path': '$user'
-                }
-              },
-              {
-                '$match': {
-                    '$expr': {
-                        '$and': [
-                            {
-                                '$eq': [
-                                    '$status', True
-                                ]
-                            },
-                            {
-                                '$eq': [
-                                    '$user.username', username
-                                ]
-                            }
-                        ]
-                    }
-                }
-              },
-              {
-                '$project': {
-                  '_id': 1,
-                  'description': 1,
-                  'status': 1,
-                  'created_at': 1,
-                  'attachments': 1,
-                  'username': '$user.username',
-                  'links': 1,
-                  'files': 1,
-                  'fullname': {"$concat": ["$user.name", " ", "$user.lastname"]}
-                }
-              },
-              {
-                  '$sort': {
-                      'created_at': -1
-                  }
-              }
-              ],
-            'as': 'deliveries'
-          }
         }, {
             '$match': {
                 '$expr': {
@@ -504,7 +430,7 @@ def get_activity(activityid: str, username: str):
                 'created_at': -1
             }
         }
-    ])
+    ]).try_next()
 
 
 def verify_activity_exists(activityid: str):
@@ -525,11 +451,11 @@ def get_activity_by_id_deliveries(activityid: str):
     return get_activity_deliveries(activityid)
 
 
-def get_activity_by_id(activityid: str, username: str):
+def get_activity_by_id(activityid: str):
     activity = verify_activity_exists(activityid)
     if not activity:
         raise HTTPException('Actividad no encontrada')
-    return get_activity(activityid, username)
+    return get_activity(activityid)
 
 
 def delete_activity_attachments(activityid: str):

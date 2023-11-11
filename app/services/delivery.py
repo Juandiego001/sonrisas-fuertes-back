@@ -136,8 +136,8 @@ def get_delivery(deliveryid: str):
     ]).try_next()
 
 
-def verify_delivery_exists(activityid: str):
-    return mongo.db.deliveries.find_one(ObjectId(activityid))
+def verify_delivery_exists(paramid: str):
+    return mongo.db.deliveries.find_one(ObjectId(paramid))
 
 
 def get_delivery_by_id(deliveryid: str):
@@ -182,7 +182,7 @@ def update_delivery(deliveryid: str, params: dict):
 def delete_delivery(deliveryid: str):
     if not verify_delivery_exists(deliveryid):
         raise HTTPException('Entrega no encontrada')
-    deleted = mongo.db.deliveries.delete_one(ObjectId(deliveryid))
+    deleted = mongo.db.deliveries.delete_one({'_id': ObjectId(deliveryid)})
     if not deleted:
         raise HTTPException('La entrega no fue eliminada')
     return deleted

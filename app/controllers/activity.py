@@ -2,7 +2,7 @@ import json
 from flask_jwt_extended import get_jwt, jwt_required
 from werkzeug.exceptions import HTTPException
 from apiflask import APIBlueprint, abort
-from app.schemas.activity import ActivityIn, ActivityDeliveryOut,\
+from app.schemas.activity import ActivityIn, ActivityOut, ActivityDeliveryOut,\
     ActivityDeliveriesOut, Activities
 from app.services import activity
 from app.schemas.generic import Message
@@ -41,6 +41,21 @@ def get_activites():
     '''
     try:
         return Activities().dump({'items': activity.get_activities()})
+    except Exception as ex:
+        abort(500, str(ex))
+
+
+@bp.get('/<string:activityid>')
+@bp.output(ActivityOut)
+@jwt_required()
+def get_activity_detail(activityid):
+    '''
+    Get activity detail
+    '''
+    try:
+        return activity.get_activity_by_id(activityid)
+    except HTTPException as ex:
+        abort(404, ex.description)
     except Exception as ex:
         abort(500, str(ex))
 
