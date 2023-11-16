@@ -3,12 +3,12 @@ from app.schemas.generic import DefaultAuto
 
 
 class AdminIn(DefaultAuto):
-    name = fields.String()
-    lastname = fields.String()
-    document = fields.String()
-    username = fields.String()
-    password = fields.String(required=False, load_default='')
-    email = fields.String()
+    name = fields.String(required=True)
+    lastname = fields.String(required=True)
+    document = fields.String(required=False)
+    username = fields.String(required=True)
+    password = fields.String(required=False)
+    email = fields.String(required=False)
     status = fields.String(load_default='PENDING', allow_none=True)
 
 

@@ -10,21 +10,19 @@ def verify_if_patient_exists(params: dict):
 
 
 def create_patient(params: dict):
-    patient = verify_if_patient_exists({'document': params['document']})
-    if patient:
-        raise HTTPException('El usuario ya existe')
+    if 'document' in params:
+        patient = verify_if_patient_exists({'document': params['document']})
+        if patient:
+            raise HTTPException('El usuario ya existe')
     params['status'] = 'PENDING'
     params['updated_at'] = datetime.now()
     profileid = mongo.db.profiles.find_one({'name': 'Estudiante'})['_id']
-
     tutorsid = params.pop('tutorsid') if 'tutorsid' in params else []
     patientid = mongo.db.users.insert_one(params).inserted_id
-
     if len(tutorsid):
         user_tutors = [{'tutorid': ObjectId(tutorid),
                         'userid': ObjectId(patientid)} for tutorid in tutorsid]
         mongo.db.user_tutors.insert_many(user_tutors)
-
     return create_user_profile({
         'userid': patientid,
         'profileid': profileid

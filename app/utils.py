@@ -12,6 +12,7 @@ from flask_jwt_extended import create_access_token, get_jwt,\
 from app import app, jwt
 from app.schemas.account import Profile 
 
+
 def generate_id():
     return base64.urlsafe_b64encode(uuid4().bytes).decode('utf-8').strip('=')
 
@@ -74,6 +75,6 @@ def refresh_expiring_jwts(response):
 @jwt.expired_token_loader
 def check_if_token_is_expired(jwt_header, jwt_payload: dict):
     response = jsonify({'message': 'Sesión expirada.\
-                        Por favor, volver a iniciar sesión'})
+                        Por favor iniciar sesión nuevamente'})
     unset_jwt_cookies(response)
     return response, 401

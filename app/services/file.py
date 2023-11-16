@@ -35,14 +35,6 @@ def get_dbx_folder(params: dict):
             delivery.verify_delivery_exists
 
 
-# def set_file_motive(params: dict):    
-    # 'folderid': ObjectId(params['folderid']) if params['folderid'] else None,
-    # 'activityid': ObjectId(params['activityid']) if params['activityid'] else None,
-    # 'publicationid': ObjectId(params['publicationid']) if params['publicationid'] else None,
-    # 'commentid': ObjectId(params['commentid']) if params['commentid'] else None,
-    # 'deliveryid': ObjectId(params['deliveryid']) if params['deliveryid'] else None,
-
-
 def put_file(params: dict):
     file = params.pop('file')
     filename = secure_filename(file.filename)
@@ -60,7 +52,18 @@ def put_file(params: dict):
     params['real_name'] = filename
     params['status'] = True
     params['created_at'] = params['updated_at'] = datetime.now()
-    return mongo.db.files.insert_one(params)
+    return mongo.db.files.insert_one(
+        {key:value for key, value in params.items() if key != '_id'})
+
+
+def put_files(params: dict):
+    files = params.pop('files')
+    for file in files:
+        params['file'] = file
+        inserted = put_file(params)
+        if not inserted:
+            raise HTTPException('El archivo no fue ingresado')
+
 
 
 def get_files():

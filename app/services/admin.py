@@ -10,11 +10,9 @@ def verify_if_admin_exists(params: list):
 
 
 def create_admin(params: dict):
-    admin = verify_if_admin_exists([
-        {'username': params['username']},
-        {'email': params['email']},
-        {'document': params['document']},
-    ])
+    verify_params = [{key:value for key, value in params.items()
+                      if key in ['username', 'email', 'document']}]
+    admin = verify_if_admin_exists(verify_params)
     if admin:
         raise HTTPException('El usuario ya existe')
     params['status'] = 'PENDING'

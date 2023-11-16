@@ -1,7 +1,7 @@
 from apiflask import APIBlueprint, abort
 from flask import send_file
 from flask_jwt_extended import get_jwt, jwt_required
-from app.schemas.file import FileIn, FileOut, Files
+from app.schemas.file import FileIn, FilesIn, FileOut, Files
 from app.services import file
 from app.schemas.generic import Message
 from werkzeug.exceptions import HTTPException
@@ -13,13 +13,26 @@ bp = APIBlueprint('file', __name__)
 
 
 @bp.put('/')
-@bp.input(FileIn, location='form_and_files')
+@bp.input(FileIn, location='files')
 @bp.output(Message)
 @jwt_required()
-def put_file(form_and_files_data):
+def put_file(files_data):
     try:
-        form_and_files_data['updated_by'] = get_jwt()['username']
-        file.put_file(form_and_files_data)
+        files_data['updated_by'] = get_jwt()['username']
+        file.put_files(files_data)
+        return success_message()
+    except Exception as ex:
+        abort(500, str(ex))
+
+
+@bp.put('/multiple-files')
+@bp.input(FilesIn, location='files')
+@bp.output(Message)
+@jwt_required()
+def put_files(files_data):
+    try:
+        files_data['updated_by'] = get_jwt()['username']
+        file.put_files(files_data)
         return success_message()
     except Exception as ex:
         abort(500, str(ex))

@@ -12,6 +12,16 @@ class FileIn(DefaultAuto):
     status = fields.Boolean(required=False)
 
 
+class FilesIn(DefaultAuto):
+    folderid = ObjectId(required=False, load_default=None)
+    activityid = ObjectId(required=False, load_default=None)
+    publicationid = ObjectId(required=False, load_default=None)
+    commentid = ObjectId(required=False, load_default=None)
+    deliveryid = ObjectId(required=False, load_default=None)
+    files = fields.List(fields.File())
+    status = fields.Boolean(required=False)
+
+
 class FileOut(DefaultAuto):
     folderid = ObjectId()
     activityid = ObjectId()

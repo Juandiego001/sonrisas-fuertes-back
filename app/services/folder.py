@@ -16,6 +16,7 @@ def create_folder(params: dict):
     if verify_folder_exists([{'name': params['name']}]):
         raise HTTPException('La carpeta ya existe')
     params['updated_at'] = datetime.now()
+    params['status'] = True
     return mongo.db.folders.insert_one(params)
 
 

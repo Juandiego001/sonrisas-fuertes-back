@@ -49,4 +49,3 @@ def update_profile(profileid, data):
         return {'message': 'Profile updated successfully'}
     except Exception as ex:
         abort(500, str(ex))
-

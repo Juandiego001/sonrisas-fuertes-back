@@ -10,11 +10,9 @@ def verify_if_tutor_exists(params: list):
 
 
 def create_tutor(params: dict):
-    tutor = verify_if_tutor_exists([
-        {'username': params['username']},
-        {'email': params['email']},
-        {'document': params['document']},
-    ])
+    verify_params = [{key:value for key, value in params.items()
+                      if key in ['username', 'email', 'document']}]
+    tutor = verify_if_tutor_exists(verify_params)
     if tutor:
         raise HTTPException('El usuario ya existe')
     params['status'] = 'PENDING'
