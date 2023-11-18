@@ -181,11 +181,12 @@ def get_patients(query: dict = {}):
 
 def update_patient(patientid, params):
     patientid = ObjectId(patientid)
-    patient = get_patient(patientid)
+    patient = get_patient(patientid) # {name: Prueba, lastname: Usuario}
     if not patient:
         raise HTTPException('Estudiante no encontrado')
 
-    if 'document' in params and patient['document'] != params['document'] and\
+    if 'document' in params and 'document' in patient and\
+        patient['document'] != params['document'] and\
     verify_if_patient_exists({'document': params['document']}):
         raise HTTPException('El usuario ya existe')
     
