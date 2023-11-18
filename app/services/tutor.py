@@ -86,11 +86,17 @@ def update_tutor(tutorid, params):
     
     verify_data = [
         {'username': params['username']\
-         if tutor['username'] != params['username'] else ''},
+         if 'username' in params and\
+            'username' in tutor and\
+                tutor['username'] != params['username'] else ''},
         {'email': params['email']\
-         if tutor['email'] != params['email'] else ''},
+         if 'email' in params and\
+            'email' in tutor and\
+                tutor['email'] != params['email'] else ''},
         {'document': params['document']\
-         if tutor['document'] != params['document'] else ''}
+         if 'document' in params and\
+            'document' in tutor and\
+                tutor['document'] != params['document'] else ''}
     ]
 
     if verify_if_tutor_exists(verify_data):
